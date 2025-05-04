@@ -1,7 +1,29 @@
-# React Chrome Extension Template
+# Fillmate - Job Application Autofill Extension
 
-This is a template for creating a Chrome extension using React and [Vite](https://vitejs.dev/) with TypeScript.
+Fillmate is a lightweight Chrome extension that helps you speed through job applications by automatically filling your saved information across popular job boards.
 
+## 🚀 Features
+
+✅ **Autofill common application fields with one click**
+
+📎 **Upload and reuse your resume and cover letter files**
+
+🌍 **Works across dozens of job platforms** including:
+  - Greenhouse
+  - Lever
+  - AshbyHQ
+  - And more job sites continuously being added
+
+🧩 **Floating sidebar UI** that appears on supported job sites
+
+✍️ **Add custom Q&A blocks** (e.g., "Why do you want this job?") - *Coming Soon*
+
+🔒 **All data stored locally in your browser** (no cloud, no tracking)
+
+💼 **Comprehensive Profile Management**: Store and manage your complete profile:
+  - Personal details (name, email, phone)
+  - Professional links (LinkedIn, GitHub, portfolio)
+  - Location and visa information
 
 ## Getting Started
 
@@ -11,12 +33,11 @@ Make sure you have [Node.js](https://nodejs.org/) (version 18+ or 20+) installed
 
 ### Setup
 
-1. Clone or fork the repository :
+1. Clone the repository:
 
     ```sh
-    # To clone
-    git clone https://github.com/5tigerjelly/chrome-extension-react-template
-    cd chrome-extension-react-template
+    git clone https://github.com/yourusername/fillmate.git
+    cd fillmate
     ```
 
 2. Install the dependencies:
@@ -33,7 +54,7 @@ To start the development server:
 npm run dev
 ```
 
-This will start the Vite development server and open your default browser.
+This will start the Vite development server and build the extension files.
 
 ## 📦 Build 
 
@@ -43,24 +64,39 @@ To create a production build:
 npm run build
 ```
 
-This will generate the build files in the `build` directory.
+This will generate the build files in the `dist` directory.
 
 ## 📂 Load Extension in Chrome
 
 1. Open Chrome and navigate to `chrome://extensions/`.
 2. Enable "Developer mode" using the toggle switch in the top right corner.
-3. Click "Load unpacked" and select the `build` directory.
+3. Click "Load unpacked" and select the `dist` directory.
 
-Your React app should now be loaded as a Chrome extension!
+Your extension should now be loaded in Chrome! Navigate to a supported job application page to see it in action.
 
 ## 🗂️ Project Structure
 
 - `public/`: Contains static files and the `manifest.json`.
-- `src/`: Contains the React app source code.
+- `src/`: 
+  - `background/`: Background scripts for the extension
+  - `content/`: Content scripts that run on job sites
+  - `options/`: Profile settings page
+  - `popup/`: Extension popup UI
+  - `sidebar/`: Floating autofill button
+  - `storage/`: Data storage logic
+  - `utils/`: Utility functions and helpers
 - `vite.config.ts`: Vite configuration file.
 - `tsconfig.json`: TypeScript configuration file.
 - `package.json`: Contains the project dependencies and scripts.
 
-## License
+## 📄 License
 
 This project is licensed under the MIT License.
+
+## 🤝 Contributing
+
+Pull requests and feedback are welcome! Please open an issue first to discuss major changes.
+
+---
+
+FillMate – Skip the typing. Focus on getting hired.

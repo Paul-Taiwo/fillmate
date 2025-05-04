@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Job Application Autofill",
+  "name": "Fillmate",
   "version": "1.0.0",
-  "description": "Autofills job applications on various platforms.",
+  "description": "FillMate is a lightweight React-based Chrome extension that helps you speed through job applications by autofilling your saved information across popular job boards like Greenhouse, Ashby, Lever, and more.",
   "permissions": [
     "storage",
     "activeTab",
