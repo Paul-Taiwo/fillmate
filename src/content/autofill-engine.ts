@@ -2,6 +2,7 @@ import { UserProfile } from "../types";
 import { mapProfileToFields } from "../utils/fieldMapper";
 import { fillFormField } from "../utils/field-fillers";
 import { handleAshbyHqFileUploads, handleAshbyHqCustomFields } from "./handlers/ashbyhq";
+import { handleGreenhouseCustomFields } from "./handlers/greenhouse";
 import { handleStandardFileUploads } from "./handlers/file-upload-handler";
 
 /**
@@ -77,8 +78,17 @@ export const executeAutofill = async (): Promise<{
     // Then handle file uploads
     const ashbyFileFieldsHandled = await handleAshbyHqFileUploads(profile);
     fieldsFilled += ashbyFileFieldsHandled;
+  } else if (
+    hostname.includes("greenhouse.io") ||
+    hostname.includes("boards.greenhouse.io")
+  ) {
+    console.log("Greenhouse detected - using special handlers");
+
+    // Use dedicated Greenhouse handler which handles both fields and file uploads
+    const greenhouseFieldsHandled = await handleGreenhouseCustomFields(profile);
+    fieldsFilled += greenhouseFieldsHandled;
   } else {
-    // Handle File Uploads for non-AshbyHQ sites using standard approach
+    // Handle File Uploads for non-specific sites using standard approach
     const standardFileFieldsHandled = await handleStandardFileUploads(profile);
     fieldsFilled += standardFileFieldsHandled;
   }
