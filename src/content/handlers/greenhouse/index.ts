@@ -11,323 +11,403 @@ export const handleGreenhouseCustomFields = async (
   let fieldsHandled = 0;
 
   try {
-    console.log("Starting Greenhouse-specific field handling");
+    // Handle basic fields first (firstname, lastname, email, etc.)
+    const basicFieldsHandled = await handleGreenhouseBasicFields(profile);
+    fieldsHandled += basicFieldsHandled;
 
-    // Handle first name and last name separately (Greenhouse usually has separate fields)
-    if (profile.name) {
-      const nameParts = profile.name.trim().split(/\s+/);
-      const firstName = nameParts[0];
-      const lastName = nameParts.slice(1).join(" ");
+    // Handle React Select dropdowns (gender, location, etc.)
+    const reactSelectsHandled = await handleGreenhouseReactSelects(profile);
+    fieldsHandled += reactSelectsHandled;
 
-      // Handle First Name
-      const firstNameField = document.getElementById("first_name") as HTMLInputElement;
-      if (firstNameField && firstNameField instanceof HTMLInputElement) {
-        console.log("Found first name field by ID");
-        firstNameField.value = firstName;
-        firstNameField.dispatchEvent(new Event("input", { bubbles: true }));
-        firstNameField.dispatchEvent(new Event("change", { bubbles: true }));
-        fieldsHandled++;
-      }
-
-      // Handle Last Name
-      const lastNameField = document.getElementById("last_name") as HTMLInputElement;
-      if (lastNameField && lastNameField instanceof HTMLInputElement) {
-        console.log("Found last name field by ID");
-        lastNameField.value = lastName;
-        lastNameField.dispatchEvent(new Event("input", { bubbles: true }));
-        lastNameField.dispatchEvent(new Event("change", { bubbles: true }));
-        fieldsHandled++;
-      }
-    }
-
-    // Handle standard fields by ID
-    const standardFields = [
-      { id: "email", value: profile.email },
-      { id: "phone", value: profile.phone },
-    ];
-
-    for (const field of standardFields) {
-      if (field.value) {
-        const inputField = document.getElementById(field.id) as HTMLInputElement;
-        if (inputField && inputField instanceof HTMLInputElement) {
-          console.log(`Found ${field.id} field by ID`);
-          inputField.value = field.value;
-          inputField.dispatchEvent(new Event("input", { bubbles: true }));
-          inputField.dispatchEvent(new Event("change", { bubbles: true }));
-          fieldsHandled++;
-        }
-      }
-    }
-
-    // Handle Greenhouse React Select dropdowns (gender, location, etc)
-    if (
-      profile.gender ||
-      profile.location ||
-      profile.visaStatus ||
-      profile.noticePeriod
-    ) {
-      const reactSelectsHandled = await handleGreenhouseReactSelects(profile);
-      fieldsHandled += reactSelectsHandled;
-    }
-
-    // Handle Greenhouse dynamic question fields
-    if (
-      profile.linkedin ||
-      profile.github ||
-      profile.portfolio ||
-      profile.howDidYouHear
-    ) {
-      const additionalFields = handleGreenhouseQuestionFields(profile);
-      fieldsHandled += additionalFields;
-    }
+    // Handle other dynamic form fields (linkedin, github, portfolio, etc.)
+    const dynamicFieldsHandled = await handleGreenhouseDynamicFields(profile);
+    fieldsHandled += dynamicFieldsHandled;
 
     // Handle file uploads
     const fileFieldsHandled = await handleGreenhouseFileUploads(profile);
     fieldsHandled += fileFieldsHandled;
-    console.log(`Handled ${fileFieldsHandled} file uploads`);
   } catch (error) {
-    console.error("Error handling Greenhouse custom fields:", error);
+    // Silent error handling
   }
 
-  console.log(`Greenhouse fields handler completed: ${fieldsHandled} fields filled`);
   return fieldsHandled;
 };
 
 /**
- * Handle Greenhouse React Select dropdowns (like gender, location, etc)
+ * Handle basic form fields specific to Greenhouse
+ */
+const handleGreenhouseBasicFields = async (profile: UserProfile): Promise<number> => {
+  let fieldsHandled = 0;
+
+  try {
+    // Handle first name field
+    const firstNameInput = document.getElementById("first_name");
+    if (firstNameInput instanceof HTMLInputElement && profile.name) {
+      const nameParts = profile.name.split(" ");
+      const firstName = nameParts[0];
+
+      firstNameInput.value = firstName;
+      firstNameInput.dispatchEvent(new Event("input", { bubbles: true }));
+      firstNameInput.dispatchEvent(new Event("change", { bubbles: true }));
+      fieldsHandled++;
+    }
+
+    // Handle last name field
+    const lastNameInput = document.getElementById("last_name");
+    if (lastNameInput instanceof HTMLInputElement && profile.name) {
+      const nameParts = profile.name.split(" ");
+      const lastName = nameParts.length > 1 ? nameParts.slice(1).join(" ") : "";
+
+      lastNameInput.value = lastName;
+      lastNameInput.dispatchEvent(new Event("input", { bubbles: true }));
+      lastNameInput.dispatchEvent(new Event("change", { bubbles: true }));
+      fieldsHandled++;
+    }
+
+    // Handle other basic fields (email, phone, etc.)
+    const fieldMappings: { [key: string]: keyof UserProfile } = {
+      email: "email",
+      phone: "phone",
+      phone_number: "phone",
+    };
+
+    for (const [fieldId, profileKey] of Object.entries(fieldMappings)) {
+      const field = document.getElementById(fieldId);
+      if (field instanceof HTMLInputElement && profile[profileKey]) {
+        field.value = profile[profileKey] as string;
+        field.dispatchEvent(new Event("input", { bubbles: true }));
+        field.dispatchEvent(new Event("change", { bubbles: true }));
+        fieldsHandled++;
+      }
+    }
+  } catch (error) {
+    // Silent error handling
+  }
+
+  return fieldsHandled;
+};
+
+/**
+ * Handles React Select dropdowns in Greenhouse forms
+ * These are more complex than standard inputs and require special handling
  */
 const handleGreenhouseReactSelects = async (profile: UserProfile): Promise<number> => {
   let fieldsHandled = 0;
 
   try {
     // Find all select containers
-    const selectContainers = document.querySelectorAll(".select__container");
-    console.log(`Found ${selectContainers.length} select containers`);
+    const selectContainers = document.querySelectorAll('[class*="select"]');
 
+    if (!selectContainers || selectContainers.length === 0) {
+      return 0;
+    }
+
+    // Process each select container to identify the field and fill it
     for (const container of selectContainers) {
+      // Find the label to identify the field
       const label = container.querySelector("label");
       if (!label) continue;
 
-      const labelText = label.textContent?.toLowerCase() || "";
-      const labelFor = label.getAttribute("for");
+      const labelText = label.textContent?.trim().toLowerCase() || "";
+      const labelFor = label.getAttribute("for") || "";
 
-      if (!labelFor) continue;
+      // Skip if we can't identify the field
+      if (!labelText) continue;
 
-      // Match label text to profile fields
-      let valueToSelect: string | undefined = undefined;
+      // Map label text to profile fields
+      let valueToSelect = "";
 
-      if (labelText.includes("gender") && profile.gender) {
-        console.log(`Found gender select with id: ${labelFor}`);
-        valueToSelect = profile.gender;
-      } else if (labelText.includes("visa") || labelText.includes("sponsorship")) {
-        // Handle visa/sponsorship fields
-        if (profile.visaStatus === "requires_sponsorship") {
-          valueToSelect = "Yes";
-        } else if (profile.visaStatus === "does_not_require_sponsorship") {
-          valueToSelect = "No";
-        }
-      } else if (labelText.includes("notice") || labelText.includes("available")) {
-        valueToSelect = profile.noticePeriod;
-      } else if (
-        (labelText.includes("location") || labelFor === "candidate-location") &&
-        profile.location
-      ) {
-        console.log(`Found location select with id: ${labelFor}`);
-        valueToSelect = profile.location;
-      }
-
-      if (valueToSelect) {
-        // Find the input element
+      // Handle gender field
+      if (labelText.includes("gender")) {
         const inputElement = document.getElementById(labelFor);
-        if (!inputElement) {
-          console.log(`Could not find input element with id ${labelFor}`);
-          continue;
-        }
-
-        console.log(`Processing ${labelText} field with value: ${valueToSelect}`);
-
-        // Special handling for location field which needs more time to populate suggestions
-        const isLocationField =
-          labelFor === "candidate-location" || labelText.includes("location");
-
-        // First set the input value
-        inputElement.focus();
-        if (inputElement instanceof HTMLInputElement) {
-          inputElement.value = valueToSelect;
-          inputElement.dispatchEvent(new Event("input", { bubbles: true }));
-        }
-
-        // Click on the input to open the dropdown
-        inputElement.click();
-        console.log(`Clicked on ${labelText} input to open dropdown`);
-
-        // Wait for dropdown options to appear (longer for location fields)
-        await new Promise((resolve) => setTimeout(resolve, isLocationField ? 500 : 200));
-
-        // Find the React Select option that matches our value
-        const options = document.querySelectorAll(".select__option");
-        console.log(`Found ${options.length} options for ${labelText}`);
-
-        let optionFound = false;
-        for (const option of options) {
-          const optionText = option.textContent?.trim() || "";
-          // For location, we need to be more flexible with matching
-          if (isLocationField) {
-            if (
-              optionText.toLowerCase().includes(valueToSelect.toLowerCase()) ||
-              valueToSelect.toLowerCase().includes(optionText.toLowerCase().split(",")[0])
-            ) {
-              // Click the matching option
-              console.log(`Clicking location option "${optionText}"`);
-              (option as HTMLElement).click();
-              optionFound = true;
-              fieldsHandled++;
-              break;
-            }
-          } else {
-            // Standard matching for other fields
-            if (optionText.toLowerCase().includes(valueToSelect.toLowerCase())) {
-              // Click the matching option
-              console.log(`Clicking option "${optionText}" for ${labelText}`);
-              (option as HTMLElement).click();
-              optionFound = true;
-              fieldsHandled++;
-              break;
-            }
-          }
-        }
-
-        // If exact match not found, try first option
-        if (!optionFound && options.length > 0) {
-          console.log(
-            `No exact match found for "${valueToSelect}", using first option: ${options[0].textContent}`
+        if (inputElement) {
+          valueToSelect = profile.gender || "";
+          fieldsHandled += await handleReactSelect(
+            inputElement,
+            labelText,
+            valueToSelect
           );
-          (options[0] as HTMLElement).click();
-          fieldsHandled++;
-        }
-
-        // If no dropdown appeared or no options found, try direct input for non-location fields
-        if (!optionFound && !options.length && !isLocationField) {
-          console.log(`No options found, attempting direct input for ${labelText}`);
-          if (inputElement instanceof HTMLInputElement) {
-            inputElement.setAttribute("value", valueToSelect);
-            inputElement.dispatchEvent(new Event("input", { bubbles: true }));
-            inputElement.dispatchEvent(new Event("change", { bubbles: true }));
-          }
-        }
-
-        // For location field, if no match found, try setting value and pressing Enter
-        if (!optionFound && isLocationField) {
-          console.log(`No location match found, trying to set value and press Enter`);
-          if (inputElement instanceof HTMLInputElement) {
-            inputElement.value = valueToSelect;
-            inputElement.dispatchEvent(new Event("input", { bubbles: true }));
-            // Press Enter to confirm selection
-            const enterEvent = new KeyboardEvent("keydown", {
-              key: "Enter",
-              code: "Enter",
-              bubbles: true,
-            });
-            inputElement.dispatchEvent(enterEvent);
-          }
         }
       }
-    }
 
-    // Special handling for candidate-location if not found through normal processing
-    if (profile.location && !fieldsHandled) {
-      const locationField = document.getElementById("candidate-location");
-      if (locationField) {
-        console.log(`Found location field by direct ID, handling separately`);
-        locationField.focus();
-        if (locationField instanceof HTMLInputElement) {
-          locationField.value = profile.location;
-          locationField.dispatchEvent(new Event("input", { bubbles: true }));
+      // Handle location field
+      else if (labelText.includes("location") || labelText.includes("where")) {
+        const inputElement = document.getElementById(labelFor);
+        if (inputElement) {
+          valueToSelect = profile.location || "";
+          fieldsHandled += await handleReactSelect(
+            inputElement,
+            labelText,
+            valueToSelect
+          );
         }
+      }
 
-        // Wait for suggestions to populate
-        await new Promise((resolve) => setTimeout(resolve, 500));
+      // Handle visa sponsorship field
+      else if (
+        labelText.includes("visa") ||
+        labelText.includes("sponsor") ||
+        labelText.includes("work authorization") ||
+        labelText.includes("authorized")
+      ) {
+        const inputElement = document.getElementById(labelFor);
+        if (inputElement) {
+          // Convert visa status to a yes/no value
+          const requiresSponsorship = profile.visaStatus === "requires_sponsorship";
+          valueToSelect = requiresSponsorship ? "Yes" : "No";
+          fieldsHandled += await handleReactSelect(
+            inputElement,
+            labelText,
+            valueToSelect
+          );
+        }
+      }
 
-        // Press down arrow to select first suggestion and Enter to confirm
-        locationField.dispatchEvent(
-          new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true })
-        );
-        await new Promise((resolve) => setTimeout(resolve, 100));
-        locationField.dispatchEvent(
-          new KeyboardEvent("keydown", { key: "Enter", bubbles: true })
-        );
-        fieldsHandled++;
+      // Handle notice period field
+      else if (labelText.includes("notice") || labelText.includes("start")) {
+        const inputElement = document.getElementById(labelFor);
+        if (inputElement) {
+          valueToSelect = profile.noticePeriod || "";
+          fieldsHandled += await handleReactSelect(
+            inputElement,
+            labelText,
+            valueToSelect
+          );
+        }
+      }
+
+      // For GDPR/privacy related selects (often required), just select the first option
+      else if (
+        labelText.includes("gdpr") ||
+        labelText.includes("privacy") ||
+        labelText.includes("consent") ||
+        labelText.includes("terms")
+      ) {
+        const inputElement = document.getElementById(labelFor);
+        if (inputElement) {
+          fieldsHandled += await handleReactSelect(inputElement, labelText, "Yes");
+        }
       }
     }
   } catch (error) {
-    console.error("Error handling Greenhouse React Select fields:", error);
+    // Silent error handling
   }
 
   return fieldsHandled;
 };
 
 /**
- * Helper function to handle Greenhouse's dynamic question fields that use
- * IDs like question_12345678
+ * Helper function to handle a single React Select dropdown
  */
-const handleGreenhouseQuestionFields = (profile: UserProfile): number => {
+const handleReactSelect = async (
+  inputElement: HTMLElement,
+  labelText: string,
+  valueToSelect: string
+): Promise<number> => {
+  if (!inputElement || !valueToSelect) return 0;
+
+  try {
+    // 1. Focus and click on the input to open the dropdown
+    inputElement.focus();
+    inputElement.click();
+
+    // 2. Wait for the dropdown to appear
+    await new Promise((resolve) => setTimeout(resolve, 300));
+
+    // 3. Find all dropdown options
+    const optionsContainer = document.querySelector('[class*="menu"]');
+    if (!optionsContainer) return 0;
+
+    const options = optionsContainer.querySelectorAll('[id*="option"]');
+    if (!options || options.length === 0) {
+      // If no options found, try inputting the text directly
+      if (inputElement instanceof HTMLInputElement) {
+        inputElement.value = valueToSelect;
+        inputElement.dispatchEvent(new Event("input", { bubbles: true }));
+        inputElement.dispatchEvent(new Event("change", { bubbles: true }));
+
+        // Press Enter to confirm selection
+        const enterEvent = new KeyboardEvent("keydown", {
+          key: "Enter",
+          code: "Enter",
+          keyCode: 13,
+          bubbles: true,
+        });
+        inputElement.dispatchEvent(enterEvent);
+        return 1;
+      }
+      return 0;
+    }
+
+    // 4. Find and click the matching option
+    let foundMatch = false;
+
+    // Special handling for location field - more fuzzy matching
+    if (labelText.includes("location")) {
+      for (const option of options) {
+        if (option instanceof HTMLElement) {
+          const optionText = option.textContent?.trim().toLowerCase() || "";
+          const valueToSelectLower = valueToSelect.toLowerCase();
+
+          // For location, we do more fuzzy matching
+          if (
+            optionText.includes(valueToSelectLower) ||
+            valueToSelectLower.includes(optionText) ||
+            // Match country/city part
+            valueToSelectLower
+              .split(",")
+              .some((part) => optionText.includes(part.trim())) ||
+            optionText.split(",").some((part) => valueToSelectLower.includes(part.trim()))
+          ) {
+            option.click();
+            foundMatch = true;
+            break;
+          }
+        }
+      }
+    }
+    // Standard matching for other fields
+    else {
+      for (const option of options) {
+        if (option instanceof HTMLElement) {
+          const optionText = option.textContent?.trim().toLowerCase() || "";
+
+          if (
+            optionText.includes(valueToSelect.toLowerCase()) ||
+            valueToSelect.toLowerCase().includes(optionText)
+          ) {
+            option.click();
+            foundMatch = true;
+            break;
+          }
+        }
+      }
+    }
+
+    // 5. If no match found, just close the dropdown by clicking elsewhere
+    if (!foundMatch) {
+      // For location field, we might need to take a different approach
+      if (labelText.includes("location") && inputElement instanceof HTMLInputElement) {
+        // Enter the value directly and press Enter
+        inputElement.value = valueToSelect;
+        inputElement.dispatchEvent(new Event("input", { bubbles: true }));
+        inputElement.dispatchEvent(new Event("change", { bubbles: true }));
+
+        // Press Enter to confirm selection
+        const enterEvent = new KeyboardEvent("keydown", {
+          key: "Enter",
+          code: "Enter",
+          keyCode: 13,
+          bubbles: true,
+        });
+        inputElement.dispatchEvent(enterEvent);
+      } else {
+        // Just click elsewhere to close the dropdown
+        document.body.click();
+      }
+    }
+
+    // Direct ID-based approach for location field
+    if (labelText.includes("location") && !foundMatch) {
+      const locationField = document.getElementById("job_application_location");
+      if (locationField instanceof HTMLInputElement) {
+        locationField.value = valueToSelect;
+        locationField.dispatchEvent(new Event("input", { bubbles: true }));
+        locationField.dispatchEvent(new Event("change", { bubbles: true }));
+
+        // Dispatch blur event to trigger validation
+        locationField.dispatchEvent(new Event("blur", { bubbles: true }));
+        return 1;
+      }
+    }
+
+    return foundMatch ? 1 : 0;
+  } catch (error) {
+    // Silent error handling
+    return 0;
+  }
+};
+
+/**
+ * Handles dynamic form fields in Greenhouse
+ * These are often custom questions added by the company
+ */
+const handleGreenhouseDynamicFields = async (profile: UserProfile): Promise<number> => {
   let fieldsHandled = 0;
 
-  // Get all question field labels to match with our profile data
-  const labels = document.querySelectorAll("label[id^='question_']");
-  console.log(`Found ${labels.length} dynamic question fields`);
+  try {
+    // Find all labels that might be for dynamic fields
+    const labels = document.querySelectorAll("label");
 
-  labels.forEach((label) => {
-    const labelText = label.textContent?.toLowerCase() || "";
-    const forAttribute = label.getAttribute("for");
+    for (const label of labels) {
+      const labelText = label.textContent?.trim().toLowerCase() || "";
+      const forAttribute = label.getAttribute("for");
 
-    if (!forAttribute) return;
+      if (!forAttribute) continue;
 
-    const inputField = document.getElementById(forAttribute) as HTMLInputElement;
-    if (!inputField || !(inputField instanceof HTMLInputElement)) return;
+      const input = document.getElementById(forAttribute);
+      if (
+        !input ||
+        !(input instanceof HTMLInputElement || input instanceof HTMLTextAreaElement)
+      ) {
+        continue;
+      }
 
-    // Match label to profile fields
-    if (labelText.includes("linkedin") && profile.linkedin) {
-      console.log(`Filling LinkedIn field: ${forAttribute}`);
-      inputField.value = profile.linkedin;
-      inputField.dispatchEvent(new Event("input", { bubbles: true }));
-      inputField.dispatchEvent(new Event("change", { bubbles: true }));
-      fieldsHandled++;
-    } else if (
-      (labelText.includes("github") || labelText.includes("git")) &&
-      profile.github
-    ) {
-      console.log(`Filling GitHub field: ${forAttribute}`);
-      inputField.value = profile.github;
-      inputField.dispatchEvent(new Event("input", { bubbles: true }));
-      inputField.dispatchEvent(new Event("change", { bubbles: true }));
-      fieldsHandled++;
-    } else if (
-      (labelText.includes("portfolio") || labelText.includes("website")) &&
-      profile.portfolio
-    ) {
-      console.log(`Filling portfolio/website field: ${forAttribute}`);
-      inputField.value = profile.portfolio;
-      inputField.dispatchEvent(new Event("input", { bubbles: true }));
-      inputField.dispatchEvent(new Event("change", { bubbles: true }));
-      fieldsHandled++;
-    } else if (labelText.includes("how did you hear") && profile.howDidYouHear) {
-      console.log(`Filling "how did you hear" field: ${forAttribute}`);
-      inputField.value = profile.howDidYouHear;
-      inputField.dispatchEvent(new Event("input", { bubbles: true }));
-      inputField.dispatchEvent(new Event("change", { bubbles: true }));
-      fieldsHandled++;
-    } else if (
-      (labelText.includes("notice period") || labelText.includes("when can you start")) &&
-      profile.noticePeriod
-    ) {
-      console.log(`Filling notice period field: ${forAttribute}`);
-      inputField.value = profile.noticePeriod;
-      inputField.dispatchEvent(new Event("input", { bubbles: true }));
-      inputField.dispatchEvent(new Event("change", { bubbles: true }));
-      fieldsHandled++;
+      // Match label text to profile fields
+
+      // LinkedIn field
+      if (labelText.includes("linkedin") || labelText.includes("linked in")) {
+        input.value = profile.linkedin || "";
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+        input.dispatchEvent(new Event("change", { bubbles: true }));
+        fieldsHandled++;
+      }
+
+      // GitHub field
+      else if (labelText.includes("github") || labelText.includes("git hub")) {
+        input.value = profile.github || "";
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+        input.dispatchEvent(new Event("change", { bubbles: true }));
+        fieldsHandled++;
+      }
+
+      // Portfolio/website field
+      else if (
+        labelText.includes("portfolio") ||
+        labelText.includes("website") ||
+        labelText.includes("personal site")
+      ) {
+        input.value = profile.portfolio || "";
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+        input.dispatchEvent(new Event("change", { bubbles: true }));
+        fieldsHandled++;
+      }
+
+      // How did you hear about us field
+      else if (
+        labelText.includes("how did you hear") ||
+        labelText.includes("how you found")
+      ) {
+        input.value = profile.howDidYouHear || "";
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+        input.dispatchEvent(new Event("change", { bubbles: true }));
+        fieldsHandled++;
+      }
+
+      // Notice period field
+      else if (
+        labelText.includes("notice period") ||
+        labelText.includes("when can you start")
+      ) {
+        input.value = profile.noticePeriod || "";
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+        input.dispatchEvent(new Event("change", { bubbles: true }));
+        fieldsHandled++;
+      }
     }
-  });
+  } catch (error) {
+    // Silent error handling
+  }
 
   return fieldsHandled;
 };

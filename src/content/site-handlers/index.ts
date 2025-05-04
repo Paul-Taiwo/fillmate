@@ -1,5 +1,5 @@
 import { UserProfile } from "../../types";
-import { handleAshbyHqFileUploads, handleAshbyHqCustomFields } from "../handlers/ashbyhq";
+import { handleAshbyHQFileUploads, handleAshbyHqCustomFields } from "../handlers/ashbyhq";
 import { handleGreenhouseCustomFields } from "../handlers/greenhouse";
 import { handleLeverCustomFields } from "../handlers/lever";
 
@@ -24,7 +24,7 @@ export const siteHandlers: SiteHandlerConfig[] = [
       // Handle custom field filling first
       const fieldsHandled = await handleAshbyHqCustomFields(profile);
       // Then handle file uploads
-      const fileFieldsHandled = await handleAshbyHqFileUploads(profile);
+      const fileFieldsHandled = await handleAshbyHQFileUploads(profile);
       return fieldsHandled + fileFieldsHandled;
     },
   },

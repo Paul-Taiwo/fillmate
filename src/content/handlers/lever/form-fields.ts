@@ -32,18 +32,11 @@ interface LocationData {
  */
 export const handleVisaField = async (visaStatus: string): Promise<number> => {
   try {
-    console.log(
-      "Attempting to fill visa sponsorship field on Lever.co with:",
-      visaStatus
-    );
-
     // Convert the visa status to a boolean value for "requires sponsorship"
     const requiresSponsorship =
       visaStatus.toLowerCase() === "requires_sponsorship" ||
       visaStatus.toLowerCase() === "yes" ||
       visaStatus.toLowerCase().includes("sponsor");
-
-    console.log(`Converted visa status to requiresSponsorship=${requiresSponsorship}`);
 
     // Find visa-related questions by looking for specific text patterns
     const allQuestionContainers = document.querySelectorAll("li.application-question");
@@ -60,14 +53,12 @@ export const handleVisaField = async (visaStatus: string): Promise<number> => {
     for (const container of allQuestionContainers) {
       const questionText = container.textContent?.toLowerCase() || "";
       if (visaKeywords.some((keyword) => questionText.includes(keyword))) {
-        console.log("Found visa question:", questionText);
         visaQuestionContainer = container;
         break;
       }
     }
 
     if (!visaQuestionContainer) {
-      console.log("No visa sponsorship question found on this form");
       return 0;
     }
 
@@ -76,14 +67,12 @@ export const handleVisaField = async (visaStatus: string): Promise<number> => {
       'ul[data-qa="multiple-choice"]'
     );
     if (!radioGroup) {
-      console.log("Could not find radio button group in visa question");
       return 0;
     }
 
     // Find all radio buttons in the group
     const radioButtons = radioGroup.querySelectorAll('input[type="radio"]');
     if (radioButtons.length === 0) {
-      console.log("No radio buttons found in visa question");
       return 0;
     }
 
@@ -103,10 +92,6 @@ export const handleVisaField = async (visaStatus: string): Promise<number> => {
 
     // If we still haven't found a matching radio button, try to identify by label text
     if (!targetRadio) {
-      console.log(
-        `Could not find radio button with value="${targetValue}", trying to match by label`
-      );
-
       for (const radio of radioButtons) {
         if (!(radio instanceof HTMLInputElement)) continue;
 
@@ -129,8 +114,6 @@ export const handleVisaField = async (visaStatus: string): Promise<number> => {
 
     // If we found a radio button to check, select it
     if (targetRadio) {
-      console.log(`Selecting "${targetRadio.value}" for visa sponsorship question`);
-
       // Check if not already selected
       if (!targetRadio.checked) {
         // Multiple approaches to ensure it gets selected
@@ -149,15 +132,12 @@ export const handleVisaField = async (visaStatus: string): Promise<number> => {
 
         return 1;
       } else {
-        console.log("Radio button was already selected");
         return 0;
       }
     }
 
-    console.log("Could not find appropriate radio button for visa sponsorship");
     return 0;
   } catch (error) {
-    console.error("Error handling Lever.co visa field:", error);
     return 0;
   }
 };
@@ -168,15 +148,9 @@ export const handleVisaField = async (visaStatus: string): Promise<number> => {
  */
 export const handleLocationField = async (locationValue: string): Promise<number> => {
   try {
-    console.log("Attempting to fill location on Lever.co with:", locationValue);
-
     // Find the location input and container
     const locationInput = document.getElementById("location-input");
     if (!locationInput || !(locationInput instanceof HTMLInputElement)) {
-      console.warn(
-        "Could not find location input with ID 'location-input', trying alternative selectors"
-      );
-
       // Try alternative selectors if the ID-based approach fails
       const locationInputs = document.querySelectorAll(
         'input[placeholder*="location" i], input[aria-label*="location" i], input[name*="location" i]'
@@ -185,19 +159,16 @@ export const handleLocationField = async (locationValue: string): Promise<number
       if (locationInputs.length > 0) {
         for (const input of locationInputs) {
           if (input instanceof HTMLInputElement) {
-            console.log("Found alternative location input:", input);
             return await fillLocationInput(input, locationValue);
           }
         }
       }
 
-      console.warn("Could not find any location input field");
       return 0;
     }
 
     return await fillLocationInput(locationInput, locationValue);
   } catch (error) {
-    console.error("Error handling Lever.co location:", error);
     return 0;
   }
 };
@@ -209,14 +180,11 @@ const fillLocationInput = async (
   locationInput: HTMLInputElement,
   locationValue: string
 ): Promise<number> => {
-  console.log("Filling location input:", locationInput);
-
   // Get the location container element that wraps everything
   const locationContainer = locationInput.closest(
     "li.application-question, div.application-field"
   );
   if (!locationContainer) {
-    console.warn("Could not find location container");
     return 0;
   }
 
@@ -226,12 +194,10 @@ const fillLocationInput = async (
     locationContainer.querySelector('input[type="hidden"]');
 
   if (hiddenInputEl && !(hiddenInputEl instanceof HTMLInputElement)) {
-    console.warn("Hidden input exists but is not an input element");
+    return 0;
   }
 
   // APPROACH 1: Focus and type directly
-  console.log("APPROACH 1: Direct typing with focus events");
-
   // Focus the input first
   locationInput.focus();
   await new Promise((resolve) => setTimeout(resolve, 200));
@@ -253,8 +219,6 @@ const fillLocationInput = async (
   await new Promise((resolve) => setTimeout(resolve, 500));
 
   // APPROACH 2: Try to interact with dropdown
-  console.log("APPROACH 2: Interact with dropdown if present");
-
   // Find different possible dropdown containers
   const dropdownContainers = [
     locationContainer.querySelector(".dropdown-container"),
@@ -267,8 +231,6 @@ const fillLocationInput = async (
 
   for (const container of dropdownContainers) {
     if (container instanceof HTMLElement) {
-      console.log("Found dropdown container:", container);
-
       // Make sure it's visible (force it if necessary)
       container.style.display = "block";
       container.style.visibility = "visible";
@@ -278,7 +240,6 @@ const fillLocationInput = async (
       const options = container.querySelectorAll(
         "li, div.dropdown-location, div[role='option'], a"
       );
-      console.log(`Found ${options.length} dropdown options`);
 
       // Try to find the best matching option
       let bestOption: HTMLElement | null = null;
@@ -305,10 +266,6 @@ const fillLocationInput = async (
             }
           }
 
-          console.log(
-            `Option "${optionText}" scored ${score} for match with "${locationLower}"`
-          );
-
           if (score > bestScore) {
             bestScore = score;
             bestOption = option;
@@ -318,9 +275,6 @@ const fillLocationInput = async (
 
       // Click the best option if found
       if (bestOption && bestScore > 0) {
-        console.log(
-          `Clicking best match option: "${bestOption.textContent}" with score ${bestScore}`
-        );
         bestOption.click();
         await new Promise((resolve) => setTimeout(resolve, 300));
         return 1;
@@ -328,10 +282,6 @@ const fillLocationInput = async (
         // If no good match, click the first option
         const firstOption = options[0];
         if (firstOption instanceof HTMLElement) {
-          console.log(
-            "No ideal match found, clicking first option:",
-            firstOption.textContent
-          );
           firstOption.click();
           await new Promise((resolve) => setTimeout(resolve, 300));
           return 1;
@@ -341,9 +291,7 @@ const fillLocationInput = async (
   }
 
   // APPROACH 3: Set the hidden input directly
-  console.log("APPROACH 3: Direct manipulation of hidden input");
   if (hiddenInputEl instanceof HTMLInputElement) {
-    console.log("Setting hidden input directly");
     // Create a JSON object for the selected location
     const locationData: LocationData = { name: locationValue };
     hiddenInputEl.value = JSON.stringify(locationData);
@@ -360,8 +308,6 @@ const fillLocationInput = async (
   }
 
   // APPROACH 4: Brute force approach
-  console.log("APPROACH 4: Brute force approach as last resort");
-
   // Set the visible input
   locationInput.value = locationValue;
   locationInput.dispatchEvent(new Event("change", { bubbles: true }));
@@ -372,9 +318,7 @@ const fillLocationInput = async (
   if (formField) {
     // Add an attribute or class that might indicate selection
     formField.setAttribute("data-filled", "true");
-    console.log("Added 'data-filled' attribute to form field");
   }
 
-  console.log("Location field handling completed with brute force approach");
   return 1;
 };

@@ -10,21 +10,16 @@ export const handleLeverCustomFields = async (profile: UserProfile): Promise<num
   let fieldsHandled = 0;
 
   try {
-    console.log("Starting Lever.co-specific field handling");
-
     // Handle special form fields first (like location)
     const formFieldsHandled = await handleLeverFormFields(profile);
     fieldsHandled += formFieldsHandled;
-    console.log(`Handled ${formFieldsHandled} special form fields`);
 
     // Handle file uploads
     const fileFieldsHandled = await handleLeverFileUploads(profile);
     fieldsHandled += fileFieldsHandled;
-    console.log(`Handled ${fileFieldsHandled} file uploads`);
   } catch (error) {
-    console.error("Error handling Lever.co custom fields:", error);
+    // Silent error handling
   }
 
-  console.log(`Lever.co fields handler completed: ${fieldsHandled} fields filled`);
   return fieldsHandled;
 };

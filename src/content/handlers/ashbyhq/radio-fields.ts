@@ -9,17 +9,13 @@ export const handleAshbyHqRadioFields = async (profile: UserProfile): Promise<nu
 
   // Handle Notice Period field
   if (profile.noticePeriod) {
-    console.log("Handling notice period:", profile.noticePeriod);
-
     // Get notice period normalized for AshbyHQ format
     const normalizedNoticePeriod = getAshbyHqNoticePeriod(profile.noticePeriod);
-    console.log("Normalized for AshbyHQ:", normalizedNoticePeriod);
 
     // Step 1: Find all fieldsets with matching class names from the examples
     const fieldsets = document.querySelectorAll(
       'fieldset[class*="_container_"][class*="_fieldEntry_"]'
     );
-    console.log(`Found ${fieldsets.length} fieldsets with matching class pattern`);
 
     // Step 2: Filter fieldsets to those with notice period labels
     const noticePeriodFieldsets = Array.from(fieldsets).filter((fieldset) => {
@@ -35,10 +31,6 @@ export const handleAshbyHqRadioFields = async (profile: UserProfile): Promise<nu
         labelText.includes("begin working")
       );
     });
-
-    console.log(
-      `Found ${noticePeriodFieldsets.length} fieldsets with notice period labels`
-    );
 
     // Map of normalized values to what they might appear as in different forms
     const matchingMap = {
@@ -61,17 +53,12 @@ export const handleAshbyHqRadioFields = async (profile: UserProfile): Promise<nu
 
     // Step 3: Process each matching fieldset
     for (const fieldset of noticePeriodFieldsets) {
-      console.log("Processing notice period fieldset");
-
       // Step 4: Find all radio inputs and their labels in this fieldset
       const options = Array.from(fieldset.querySelectorAll('div[class*="_option_"]'));
 
       if (options.length === 0) {
-        console.log("No option divs found in this fieldset");
         continue;
       }
-
-      console.log(`Found ${options.length} option divs`);
 
       // Step 5: Validate the structure of radio options
       const validOptions = options.filter((option) => {
@@ -81,11 +68,8 @@ export const handleAshbyHqRadioFields = async (profile: UserProfile): Promise<nu
       });
 
       if (validOptions.length === 0) {
-        console.log("No valid radio options found");
         continue;
       }
-
-      console.log(`Found ${validOptions.length} valid radio options`);
 
       // Step 6: Get the target value to look for
       const normalizedLower = normalizedNoticePeriod.toLowerCase();
@@ -103,15 +87,11 @@ export const handleAshbyHqRadioFields = async (profile: UserProfile): Promise<nu
       }
 
       if (!targetValue) {
-        console.log("Could not determine target value from normalized notice period");
         targetValue = normalizedLower; // Fallback to direct match
       }
 
-      console.log(`Target value to look for: "${targetValue}"`);
-
       // Step 7: Find the matching option
       let matchedOption = null;
-      let matchedLabel = "";
 
       // First try exact option text match
       for (const option of validOptions) {
@@ -119,7 +99,6 @@ export const handleAshbyHqRadioFields = async (profile: UserProfile): Promise<nu
         if (!label) continue;
 
         const labelText = label.textContent?.toLowerCase().trim() || "";
-        console.log(`Checking option: "${labelText}"`);
 
         // Check if this label matches our target value or any of its variations
         const possibleMatches =
@@ -129,9 +108,7 @@ export const handleAshbyHqRadioFields = async (profile: UserProfile): Promise<nu
           labelText === targetValue ||
           possibleMatches.some((match) => labelText === match.toLowerCase())
         ) {
-          console.log(`Found exact match: "${labelText}"`);
           matchedOption = option;
-          matchedLabel = labelText;
           break;
         }
       }
@@ -154,9 +131,7 @@ export const handleAshbyHqRadioFields = async (profile: UserProfile): Promise<nu
                 match.toLowerCase().includes(labelText)
             )
           ) {
-            console.log(`Found partial match: "${labelText}"`);
             matchedOption = option;
-            matchedLabel = labelText;
             break;
           }
         }
@@ -172,37 +147,30 @@ export const handleAshbyHqRadioFields = async (profile: UserProfile): Promise<nu
         ) as HTMLElement;
 
         if (radio && label) {
-          console.log(`Selecting option: "${matchedLabel}" via radio id=${radio.id}`);
-
           try {
             // More aggressive approach to ensure the radio gets checked
 
             // Method 1: Direct property manipulation
             radio.checked = true;
-            console.log(`Set checked=true on radio`);
 
             // Method 2: Handle via attributes
             radio.setAttribute("checked", "checked");
-            console.log(`Set checked attribute`);
 
             // Method 3: Focus then click (sometimes this sequence matters)
             radio.focus();
-            console.log(`Focused radio`);
 
             // Method 4: Click the parent span container
             const parentSpan = radio.closest('span[class*="_container_"]');
             if (parentSpan instanceof HTMLElement) {
               parentSpan.click();
-              console.log(`Clicked parent span`);
             }
 
             // Method 5: Click the radio directly
             setTimeout(() => {
               try {
                 radio.click();
-                console.log(`Clicked radio directly`);
               } catch (e) {
-                console.error("Error clicking radio:", e);
+                // Silent error
               }
             }, 50);
 
@@ -210,12 +178,8 @@ export const handleAshbyHqRadioFields = async (profile: UserProfile): Promise<nu
             setTimeout(() => {
               try {
                 label.click();
-                console.log(`Clicked label`);
-
-                // Double-check if radio is checked after clicking label
-                console.log(`Radio checked state after label click: ${radio.checked}`);
               } catch (e) {
-                console.error("Error clicking label:", e);
+                // Silent error
               }
             }, 100);
 
@@ -225,25 +189,20 @@ export const handleAshbyHqRadioFields = async (profile: UserProfile): Promise<nu
             radio.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
             radio.dispatchEvent(new MouseEvent("mouseup", { bubbles: true }));
             radio.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-            console.log(`Dispatched multiple events`);
 
             fieldsHandled++;
             return fieldsHandled;
           } catch (e) {
-            console.error("Error selecting radio option:", e);
+            // Silent error
           }
         }
-      } else {
-        console.log("No matching option found in this fieldset");
       }
     }
 
     // Step 10: If we get here, try a more general approach as fallback
-    console.log("Fieldset approach failed, trying direct radio button search");
 
     // Find all radio buttons on the page
     const allRadios = document.querySelectorAll('input[type="radio"]');
-    console.log(`Found ${allRadios.length} radio buttons on page`);
 
     for (const radio of allRadios) {
       // Must have ID to find label
@@ -262,15 +221,11 @@ export const handleAshbyHqRadioFields = async (profile: UserProfile): Promise<nu
         labelText.includes("week") ||
         labelText.match(/\d+\s*(-|to)\s*\d+\s*week/)
       ) {
-        console.log(`Found potential notice period radio: "${labelText}"`);
-
         // Find if the container has notice period text
         const container = radio.closest("fieldset") || radio.closest("div");
         const containerText = container?.textContent?.toLowerCase() || "";
 
         if (containerText.includes("notice") || containerText.includes("begin working")) {
-          console.log("This radio appears to be in a notice period container");
-
           // Check if this matches our normalized value
           const normalizedLower = normalizedNoticePeriod.toLowerCase();
           let isMatch = false;
@@ -291,8 +246,6 @@ export const handleAshbyHqRadioFields = async (profile: UserProfile): Promise<nu
           }
 
           if (isMatch) {
-            console.log(`Found matching radio button: "${labelText}"`);
-
             try {
               const radioInput = radio as HTMLInputElement;
 
@@ -319,8 +272,6 @@ export const handleAshbyHqRadioFields = async (profile: UserProfile): Promise<nu
                 setTimeout(() => {
                   try {
                     label.click();
-                    // Verify checked state
-                    console.log(`Fallback radio checked state: ${radioInput.checked}`);
                   } catch (e) {
                     // Silent error
                   }
@@ -337,14 +288,12 @@ export const handleAshbyHqRadioFields = async (profile: UserProfile): Promise<nu
               fieldsHandled++;
               return fieldsHandled;
             } catch (e) {
-              console.error("Error selecting fallback radio:", e);
+              // Silent error
             }
           }
         }
       }
     }
-
-    console.log("All approaches failed to find matching notice period option");
   }
 
   return fieldsHandled;

@@ -14,7 +14,6 @@ export async function dataUrlToFile(
     const blob = await res.blob();
     return new File([blob], filename, { type: blob.type });
   } catch (error) {
-    console.error("Error converting data URL to file:", error);
     return null;
   }
 }
@@ -33,9 +32,7 @@ export const assignFileToInput = (fileInput: HTMLInputElement, file: File) => {
     fileInput.dispatchEvent(changeEvent);
     const inputEvent = new Event("input", { bubbles: true }); // Some frameworks might need this
     fileInput.dispatchEvent(inputEvent);
-
-    console.log(`Assigned file ${file.name} to input`, fileInput);
   } catch (error) {
-    console.error(`Error assigning file ${file.name} to input:`, error);
+    // Silent error handling
   }
 };

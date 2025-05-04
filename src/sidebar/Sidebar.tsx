@@ -19,8 +19,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onAutofill }) => {
         setProfile(loadedProfile);
         setIsLoading(false);
       })
-      .catch((err) => {
-        console.error("Sidebar: Error loading profile:", err);
+      .catch(() => {
         setIsLoading(false);
       });
   }, []);

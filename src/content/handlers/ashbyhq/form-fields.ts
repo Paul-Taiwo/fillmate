@@ -8,7 +8,6 @@ export const handleAshbyHqBasicFields = async (profile: UserProfile): Promise<nu
 
   try {
     // AshbyHQ often uses custom components that wrap inputs or have complex structures
-    console.log("Starting direct AshbyHQ field handling");
 
     // Handle Name fields
     if (profile.name) {
@@ -16,7 +15,6 @@ export const handleAshbyHqBasicFields = async (profile: UserProfile): Promise<nu
       const nameField = document.getElementById("_systemfield_name") as HTMLInputElement;
 
       if (nameField && nameField instanceof HTMLInputElement) {
-        console.log("Found name field by ID");
         nameField.value = profile.name;
         nameField.dispatchEvent(new Event("input", { bubbles: true }));
         nameField.dispatchEvent(new Event("change", { bubbles: true }));
@@ -67,7 +65,6 @@ export const handleAshbyHqBasicFields = async (profile: UserProfile): Promise<nu
         document.querySelector('label[for*="phone"] ~ div input');
 
       if (phoneField instanceof HTMLInputElement) {
-        console.log("Found phone field:", phoneField);
         phoneField.value = profile.phone;
         phoneField.dispatchEvent(new Event("input", { bubbles: true }));
         phoneField.dispatchEvent(new Event("change", { bubbles: true }));
@@ -245,7 +242,6 @@ export const handleAshbyHqBasicFields = async (profile: UserProfile): Promise<nu
         document.querySelector('label[for*="linkedin" i] ~ div input');
 
       if (linkedinField instanceof HTMLInputElement) {
-        console.log("Found LinkedIn field:", linkedinField);
         linkedinField.value = profile.linkedin;
         linkedinField.dispatchEvent(new Event("input", { bubbles: true }));
         linkedinField.dispatchEvent(new Event("change", { bubbles: true }));
@@ -263,7 +259,6 @@ export const handleAshbyHqBasicFields = async (profile: UserProfile): Promise<nu
         document.querySelector('input[name*="portfolio" i]');
 
       if (githubField instanceof HTMLInputElement) {
-        console.log("Found GitHub field:", githubField);
         githubField.value = profile.github;
         githubField.dispatchEvent(new Event("input", { bubbles: true }));
         githubField.dispatchEvent(new Event("change", { bubbles: true }));
@@ -287,7 +282,6 @@ export const handleAshbyHqBasicFields = async (profile: UserProfile): Promise<nu
         );
 
       if (portfolioField instanceof HTMLInputElement) {
-        console.log("Found Portfolio field:", portfolioField);
         portfolioField.value = profile.portfolio;
         portfolioField.dispatchEvent(new Event("input", { bubbles: true }));
         portfolioField.dispatchEvent(new Event("change", { bubbles: true }));
@@ -306,14 +300,10 @@ export const handleAshbyHqBasicFields = async (profile: UserProfile): Promise<nu
           }
         );
 
-        console.log(`Found ${portfolioLabels.length} portfolio-related labels`);
-
         for (const label of portfolioLabels) {
           if (label.htmlFor) {
-            console.log(`Processing portfolio label with htmlFor=${label.htmlFor}`);
             const inputElement = document.getElementById(label.htmlFor);
             if (inputElement instanceof HTMLInputElement) {
-              console.log(`Found portfolio input element by ID ${label.htmlFor}`);
               inputElement.value = profile.portfolio;
               inputElement.dispatchEvent(new Event("input", { bubbles: true }));
               inputElement.dispatchEvent(new Event("change", { bubbles: true }));
@@ -332,7 +322,6 @@ export const handleAshbyHqBasicFields = async (profile: UserProfile): Promise<nu
             if (fieldEntry) {
               const input = fieldEntry.querySelector("input");
               if (input instanceof HTMLInputElement) {
-                console.log("Found portfolio input in the same container as label");
                 input.value = profile.portfolio;
                 input.dispatchEvent(new Event("input", { bubbles: true }));
                 input.dispatchEvent(new Event("change", { bubbles: true }));
@@ -350,8 +339,6 @@ export const handleAshbyHqBasicFields = async (profile: UserProfile): Promise<nu
       const genderLabels = Array.from(document.querySelectorAll("label")).filter(
         (label) => label.textContent?.toLowerCase().includes("gender")
       );
-
-      console.log(`Found ${genderLabels.length} gender related labels`);
 
       for (const label of genderLabels) {
         // Handle select element
@@ -387,7 +374,6 @@ export const handleAshbyHqBasicFields = async (profile: UserProfile): Promise<nu
             );
 
             if (dropdownTrigger instanceof HTMLElement) {
-              console.log("Found dropdown trigger for gender:", dropdownTrigger);
               // Click to open dropdown
               dropdownTrigger.click();
 
@@ -437,8 +423,6 @@ export const handleAshbyHqBasicFields = async (profile: UserProfile): Promise<nu
         }
       );
 
-      console.log(`Found ${visaLabels.length} visa/authorization related labels`);
-
       // Try to handle each potential visa field
       for (const label of visaLabels) {
         // Map our visa status values to typical dropdown options
@@ -479,7 +463,7 @@ export const handleAshbyHqBasicFields = async (profile: UserProfile): Promise<nu
               document.querySelector(`div[class*="_yesno_"]`);
 
             if (container) {
-              console.log("Found AshbyHQ button-based visa status field");
+              // AshbyHQ typically has Yes/No buttons
               const buttons = container.querySelectorAll("button");
 
               if (buttons.length >= 2) {
@@ -488,10 +472,8 @@ export const handleAshbyHqBasicFields = async (profile: UserProfile): Promise<nu
                 const noButton = buttons[1]; // Second button is usually "No"
 
                 if (requiresSponsorship) {
-                  console.log("Clicking 'Yes' for visa sponsorship");
                   yesButton.click();
                 } else {
-                  console.log("Clicking 'No' for visa sponsorship");
                   noButton.click();
                 }
 
@@ -520,10 +502,8 @@ export const handleAshbyHqBasicFields = async (profile: UserProfile): Promise<nu
                 const noButton = buttons[1]; // Second button is usually "No"
 
                 if (requiresSponsorship) {
-                  console.log("Clicking 'Yes' for visa sponsorship");
                   yesButton.click();
                 } else {
-                  console.log("Clicking 'No' for visa sponsorship");
                   noButton.click();
                 }
 
@@ -537,7 +517,6 @@ export const handleAshbyHqBasicFields = async (profile: UserProfile): Promise<nu
               );
 
               if (dropdownTrigger instanceof HTMLElement) {
-                console.log("Found dropdown trigger for visa status:", dropdownTrigger);
                 // Click to open dropdown
                 dropdownTrigger.click();
 
@@ -547,7 +526,6 @@ export const handleAshbyHqBasicFields = async (profile: UserProfile): Promise<nu
                   const options = document.querySelectorAll(
                     'div[role="option"], li, div[class*="option"]'
                   );
-                  console.log(`Found ${options.length} potential options`);
 
                   for (const option of options) {
                     if (
@@ -556,7 +534,6 @@ export const handleAshbyHqBasicFields = async (profile: UserProfile): Promise<nu
                         ?.toLowerCase()
                         .includes(valueToSelect.toLowerCase())
                     ) {
-                      console.log("Clicking option:", option.textContent);
                       option.click();
                       fieldsHandled++;
                       break;
@@ -600,6 +577,5 @@ export const handleAshbyHqBasicFields = async (profile: UserProfile): Promise<nu
     console.error("Error handling AshbyHQ basic fields:", error);
   }
 
-  console.log(`AshbyHQ basic fields handler completed: ${fieldsHandled} fields filled`);
   return fieldsHandled;
 };

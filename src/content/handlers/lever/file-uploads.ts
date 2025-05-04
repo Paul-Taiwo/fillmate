@@ -1,26 +1,29 @@
 import { UserProfile } from "../../../types";
-import { dataUrlToFile, assignFileToInput } from "../../utils/file-handlers";
+import { dataUrlToFile } from "../../utils/file-handlers";
 
 /**
- * Special handling for Lever.co file uploads
- * Lever.co uses a specific HTML structure for file uploads
+ * Handles file uploads for Lever.co
  */
 export const handleLeverFileUploads = async (profile: UserProfile): Promise<number> => {
-  let fieldsHandled = 0;
+  let filesHandled = 0;
 
-  // Handle resume upload
-  if (profile.resumeFile?.dataUrl) {
-    const resumeHandled = await handleResumeUpload(profile);
-    fieldsHandled += resumeHandled;
+  try {
+    // Handle resume upload
+    if (profile.resumeFile) {
+      const resumeHandled = await handleResumeUpload(profile);
+      filesHandled += resumeHandled;
+    }
+
+    // Handle cover letter upload
+    if (profile.coverLetterFile) {
+      const coverLetterHandled = await handleCoverLetterUpload(profile);
+      filesHandled += coverLetterHandled;
+    }
+  } catch (error) {
+    // Silent error handling
   }
 
-  // Handle cover letter upload (if needed)
-  if (profile.coverLetterFile?.dataUrl) {
-    const coverLetterHandled = await handleCoverLetterUpload(profile);
-    fieldsHandled += coverLetterHandled;
-  }
-
-  return fieldsHandled;
+  return filesHandled;
 };
 
 /**
@@ -28,8 +31,6 @@ export const handleLeverFileUploads = async (profile: UserProfile): Promise<numb
  */
 const handleResumeUpload = async (profile: UserProfile): Promise<number> => {
   try {
-    console.log("Attempting to upload resume on Lever.co");
-
     // Convert dataUrl to File
     const resumeFile = await dataUrlToFile(
       profile.resumeFile!.dataUrl,
@@ -37,7 +38,6 @@ const handleResumeUpload = async (profile: UserProfile): Promise<number> => {
     );
 
     if (!resumeFile) {
-      console.warn("Could not convert resume data URL to File object");
       return 0;
     }
 
@@ -55,107 +55,105 @@ const handleResumeUpload = async (profile: UserProfile): Promise<number> => {
       }
     }
 
-    console.warn("All resume upload strategies failed");
     return 0;
   } catch (error) {
-    console.error("Error handling Lever.co resume upload:", error);
+    // Silent error handling
     return 0;
   }
 };
 
 /**
- * Strategy 1: Find resume input inside container
+ * Strategy 1: Find resume input within resume container
  */
-const findResumeInputInContainer = async (resumeFile: File): Promise<boolean> => {
-  const resumeContainer = document.querySelector("li.application-question.resume");
-  if (!resumeContainer) {
-    console.log("Strategy 1: Resume container not found");
+const findResumeInputInContainer = async (file: File): Promise<boolean> => {
+  try {
+    // Look for the resume container in the form
+    const resumeContainer = document.querySelector("li.application-question.resume");
+    if (!resumeContainer) {
+      return false;
+    }
+
+    // Find the file input within the container
+    const fileInput = resumeContainer.querySelector(
+      'input[type="file"]'
+    ) as HTMLInputElement;
+
+    if (fileInput && fileInput instanceof HTMLInputElement) {
+      // Assign file to input
+      assignFile(fileInput, file);
+
+      // Check if there's also an upload button that needs to be clicked
+      const uploadButton = resumeContainer.querySelector("button");
+      if (uploadButton) {
+        uploadButton.click();
+      }
+
+      return true;
+    }
+
+    return false;
+  } catch (error) {
+    // Silent error handling
     return false;
   }
-
-  console.log("Strategy 1: Found resume container on Lever.co form");
-
-  // Find the file input within the container
-  const fileInput = resumeContainer.querySelector(
-    'input[type="file"]'
-  ) as HTMLInputElement;
-
-  if (!fileInput || !(fileInput instanceof HTMLInputElement)) {
-    console.log("Strategy 1: No file input found in container");
-    return false;
-  }
-
-  console.log("Strategy 1: Found resume file input:", fileInput);
-
-  // Assign file to input
-  assignFileToInput(fileInput, resumeFile);
-
-  // Lever.co has a hidden input that requires clicking the visible button
-  const uploadButton = resumeContainer.querySelector(
-    "a.postings-btn.template-btn-utility.visible-resume-upload"
-  );
-
-  if (uploadButton) {
-    console.log("Strategy 1: Clicking on upload button to trigger file dialog");
-    // Sometimes we need to directly focus and click
-    (uploadButton as HTMLElement).focus();
-    (uploadButton as HTMLElement).click();
-  }
-
-  return true;
 };
 
 /**
- * Strategy 2: Find resume input by ID
+ * Strategy 2: Find resume input by standard ID
  */
-const findResumeInputById = async (resumeFile: File): Promise<boolean> => {
-  const idFileInput = document.getElementById("resume-upload-input") as HTMLInputElement;
+const findResumeInputById = async (file: File): Promise<boolean> => {
+  try {
+    // Look for resume input by common IDs
+    const resumeInput = document.getElementById(
+      "resume-upload-input"
+    ) as HTMLInputElement;
 
-  if (!idFileInput || !(idFileInput instanceof HTMLInputElement)) {
-    console.log("Strategy 2: Resume input with ID 'resume-upload-input' not found");
+    if (resumeInput && resumeInput instanceof HTMLInputElement) {
+      // Assign file to input
+      assignFile(resumeInput, file);
+      return true;
+    }
+
+    return false;
+  } catch (error) {
+    // Silent error handling
     return false;
   }
-
-  console.log("Strategy 2: Found resume file input by ID");
-  assignFileToInput(idFileInput, resumeFile);
-
-  // Manually trigger change event to ensure Lever.co UI updates
-  const changeEvent = new Event("change", { bubbles: true });
-  idFileInput.dispatchEvent(changeEvent);
-
-  return true;
 };
 
 /**
  * Strategy 3: Find resume input by attributes
  */
-const findResumeInputByAttributes = async (resumeFile: File): Promise<boolean> => {
-  // Try generic selectors
-  const inputs = document.querySelectorAll('input[type="file"]');
-  console.log(`Strategy 3: Found ${inputs.length} file inputs on the page`);
+const findResumeInputByAttributes = async (file: File): Promise<boolean> => {
+  try {
+    // Look for all file inputs on the page
+    const inputs = document.querySelectorAll('input[type="file"]');
 
-  for (const input of inputs) {
-    const inputEl = input as HTMLInputElement;
-    const inputId = inputEl.id?.toLowerCase() || "";
-    const inputName = inputEl.name?.toLowerCase() || "";
-    const inputClasses = inputEl.className?.toLowerCase() || "";
+    for (const input of inputs) {
+      const inputEl = input as HTMLInputElement;
+      const inputId = inputEl.id?.toLowerCase() || "";
+      const inputName = inputEl.name?.toLowerCase() || "";
+      const inputClasses = inputEl.className?.toLowerCase() || "";
 
-    // Check for resume-related attributes
-    if (
-      inputId.includes("resume") ||
-      inputName.includes("resume") ||
-      inputClasses.includes("resume") ||
-      inputEl.closest("li.resume") ||
-      inputEl.closest('[class*="resume" i]')
-    ) {
-      console.log("Strategy 3: Found resume input through attributes:", inputEl);
-      assignFileToInput(inputEl, resumeFile);
-      return true;
+      // Check for resume-related attributes
+      if (
+        inputId.includes("resume") ||
+        inputName.includes("resume") ||
+        inputClasses.includes("resume") ||
+        inputEl.closest("li.resume") ||
+        inputEl.closest('[class*="resume" i]')
+      ) {
+        // Found resume input
+        assignFile(inputEl, file);
+        return true;
+      }
     }
-  }
 
-  console.log("Strategy 3: No resume input found by attributes");
-  return false;
+    return false;
+  } catch (error) {
+    // Silent error handling
+    return false;
+  }
 };
 
 /**
@@ -163,8 +161,6 @@ const findResumeInputByAttributes = async (resumeFile: File): Promise<boolean> =
  */
 const handleCoverLetterUpload = async (profile: UserProfile): Promise<number> => {
   try {
-    console.log("Attempting to upload cover letter on Lever.co");
-
     // Convert dataUrl to File
     const coverLetterFile = await dataUrlToFile(
       profile.coverLetterFile!.dataUrl,
@@ -172,7 +168,6 @@ const handleCoverLetterUpload = async (profile: UserProfile): Promise<number> =>
     );
 
     if (!coverLetterFile) {
-      console.warn("Could not convert cover letter data URL to File object");
       return 0;
     }
 
@@ -186,8 +181,8 @@ const handleCoverLetterUpload = async (profile: UserProfile): Promise<number> =>
       ) as HTMLInputElement;
 
       if (fileInput && fileInput instanceof HTMLInputElement) {
-        console.log("Found cover letter file input");
-        assignFileToInput(fileInput, coverLetterFile);
+        // Assign file to input
+        assignFile(fileInput, coverLetterFile);
         return 1;
       }
     }
@@ -208,16 +203,36 @@ const handleCoverLetterUpload = async (profile: UserProfile): Promise<number> =>
         inputEl.closest("li.cover-letter") ||
         inputEl.closest('[class*="cover" i]')
       ) {
-        console.log("Found cover letter input through attributes:", inputEl);
-        assignFileToInput(inputEl, coverLetterFile);
+        // Found cover letter input
+        assignFile(inputEl, coverLetterFile);
         return 1;
       }
     }
 
-    console.warn("Could not find cover letter input");
     return 0;
   } catch (error) {
-    console.error("Error handling Lever.co cover letter upload:", error);
+    // Silent error handling
     return 0;
+  }
+};
+
+/**
+ * Helper function to assign a file to an input element and dispatch events
+ */
+const assignFile = (fileInput: HTMLInputElement, file: File): void => {
+  try {
+    // Create a DataTransfer to programmatically set files
+    const dataTransfer = new DataTransfer();
+    dataTransfer.items.add(file);
+    fileInput.files = dataTransfer.files;
+
+    // Dispatch events to ensure the form recognizes the file being set
+    const events = ["change", "input"];
+    for (const eventType of events) {
+      const event = new Event(eventType, { bubbles: true });
+      fileInput.dispatchEvent(event);
+    }
+  } catch (error) {
+    // Silent error handling
   }
 };

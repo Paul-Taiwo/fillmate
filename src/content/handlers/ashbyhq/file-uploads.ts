@@ -1,247 +1,206 @@
 import { UserProfile } from "../../../types";
-import { dataUrlToFile, assignFileToInput } from "../../utils/file-handlers";
+import { dataUrlToFile } from "../../utils/file-handlers";
 
 /**
- * Special handling for AshbyHQ file uploads
- * AshbyHQ uses a custom file upload component that requires special handling
+ * Handles file uploads for AshbyHQ
  */
-export const handleAshbyHqFileUploads = async (profile: UserProfile): Promise<number> => {
-  let fieldsHandled = 0;
+export const handleAshbyHQFileUploads = async (profile: UserProfile): Promise<number> => {
+  let filesHandled = 0;
 
-  if (profile.resumeFile?.dataUrl) {
-    try {
-      // Find AshbyHQ's specific hidden file input (based on their HTML structure)
-      const fileInput = document.getElementById(
-        "_systemfield_resume"
-      ) as HTMLInputElement;
-
-      if (!fileInput) {
-        console.log(
-          "Could not find file input with ID '_systemfield_resume', trying alternative approaches"
-        );
-
-        // Try to find resume sections by scanning for labels/text containing CV/Resume
-        const resumeLabels = Array.from(document.querySelectorAll("label")).filter(
-          (label) => {
-            const text = label.textContent?.toLowerCase() || "";
-            return (
-              text.includes("resume") ||
-              text.includes("cv") ||
-              text.includes("curriculum vitae")
-            );
-          }
-        );
-
-        console.log(`Found ${resumeLabels.length} resume/CV related labels`);
-
-        // Try each label to find file input
-        for (const label of resumeLabels) {
-          if (label.htmlFor) {
-            const associatedElement = document.getElementById(label.htmlFor);
-
-            // Sometimes the for attribute points to a container, not the input itself
-            if (associatedElement) {
-              const fileInputNearLabel =
-                associatedElement.querySelector('input[type="file"]') ||
-                (associatedElement instanceof HTMLInputElement &&
-                associatedElement.type === "file"
-                  ? associatedElement
-                  : null);
-
-              if (fileInputNearLabel instanceof HTMLInputElement) {
-                console.log(
-                  "Found file input through label association:",
-                  fileInputNearLabel
-                );
-
-                // Convert dataUrl to File
-                const resumeFile = await dataUrlToFile(
-                  profile.resumeFile.dataUrl,
-                  profile.resumeFile.name
-                );
-
-                if (resumeFile) {
-                  assignFileToInput(fileInputNearLabel, resumeFile);
-                  fieldsHandled++;
-
-                  // Look for upload button nearby
-                  const parentContainer =
-                    fileInputNearLabel.closest("div._fieldEntry_hkyf8_29") ||
-                    fileInputNearLabel.parentElement?.parentElement;
-
-                  if (parentContainer) {
-                    const nearbyButton = parentContainer.querySelector("button");
-                    if (nearbyButton) {
-                      setTimeout(() => {
-                        nearbyButton.click();
-                      }, 500);
-                    }
-                  }
-
-                  return fieldsHandled;
-                }
-              }
-            }
-          }
-
-          // If htmlFor didn't work, try looking at nearby elements
-          const container = label.nextElementSibling || label.parentElement;
-          if (container) {
-            const fileInputNearLabel = container.querySelector('input[type="file"]');
-
-            if (fileInputNearLabel instanceof HTMLInputElement) {
-              console.log("Found file input near label:", fileInputNearLabel);
-
-              // Convert dataUrl to File
-              const resumeFile = await dataUrlToFile(
-                profile.resumeFile.dataUrl,
-                profile.resumeFile.name
-              );
-
-              if (resumeFile) {
-                assignFileToInput(fileInputNearLabel, resumeFile);
-                fieldsHandled++;
-
-                // Look for upload button nearby
-                const nearbyButton = container.querySelector("button");
-                if (nearbyButton) {
-                  setTimeout(() => {
-                    nearbyButton.click();
-                  }, 500);
-                }
-
-                return fieldsHandled;
-              }
-            }
-          }
-        }
-
-        // Final approach: look for buttons with text "Upload File" or "Upload Resume"
-        // and check if there's a hidden file input nearby
-        const uploadButtons = Array.from(document.querySelectorAll("button")).filter(
-          (button) => {
-            const text = button.textContent?.toLowerCase() || "";
-            return (
-              text.includes("upload file") ||
-              text.includes("upload resume") ||
-              text.includes("upload cv")
-            );
-          }
-        );
-
-        console.log(`Found ${uploadButtons.length} upload buttons`);
-
-        for (const button of uploadButtons) {
-          // Check surrounding container for file input
-          const container =
-            button.closest("div._fieldEntry_hkyf8_29") ||
-            button.closest("div._container_6k3nb_71") ||
-            button.parentElement?.parentElement;
-
-          if (container) {
-            const hiddenFileInput = container.querySelector('input[type="file"]');
-
-            if (hiddenFileInput instanceof HTMLInputElement) {
-              console.log("Found hidden file input near upload button:", hiddenFileInput);
-
-              // Convert dataUrl to File
-              const resumeFile = await dataUrlToFile(
-                profile.resumeFile.dataUrl,
-                profile.resumeFile.name
-              );
-
-              if (resumeFile) {
-                assignFileToInput(hiddenFileInput, resumeFile);
-                fieldsHandled++;
-
-                // Click the button to trigger any UI updates
-                setTimeout(() => {
-                  button.click();
-                }, 500);
-
-                return fieldsHandled;
-              }
-            }
-          }
-        }
-
-        // Last resort: try any file input
-        const fallbackInput =
-          document.querySelector('input[type="file"][accept*=".pdf"]') ||
-          document.querySelector('input[type="file"][id*="resume" i]') ||
-          document.querySelector('input[type="file"]');
-
-        if (fallbackInput instanceof HTMLInputElement) {
-          console.log("Found fallback file input:", fallbackInput);
-
-          // Convert dataUrl to File
-          const resumeFile = await dataUrlToFile(
-            profile.resumeFile.dataUrl,
-            profile.resumeFile.name
-          );
-
-          if (resumeFile) {
-            assignFileToInput(fallbackInput, resumeFile);
-            fieldsHandled++;
-          }
-        } else {
-          console.warn("No suitable file input found for resume upload");
-        }
-
-        return fieldsHandled;
-      }
-
-      console.log("Found AshbyHQ file input:", fileInput);
-
-      // Convert dataUrl to File
-      const resumeFile = await dataUrlToFile(
-        profile.resumeFile.dataUrl,
-        profile.resumeFile.name
-      );
-
-      if (!resumeFile) {
-        console.error("Failed to convert resume dataUrl to File");
-        return fieldsHandled;
-      }
-
-      // Assign file to the input
-      assignFileToInput(fileInput, resumeFile);
-      fieldsHandled++;
-
-      // Find and click the upload button to ensure the UI updates
-      // Look for the button near the file input that contains "Upload File" text
-      const uploadButton = Array.from(document.querySelectorAll("button")).find(
-        (btn) =>
-          btn.textContent?.includes("Upload File") &&
-          btn.closest("div")?.contains(fileInput)
-      );
-
-      if (uploadButton) {
-        console.log("Found upload button, clicking to ensure UI updates");
-        setTimeout(() => {
-          uploadButton.click();
-        }, 500);
-      } else {
-        // Fallback approach - find any element that might be the upload button in the vicinity
-        const fallbackButtons = document.querySelectorAll(
-          '._button_6k3nb_107, button:contains("Upload")'
-        );
-
-        if (fallbackButtons.length > 0) {
-          console.log("Using fallback button");
-          setTimeout(() => {
-            (fallbackButtons[0] as HTMLElement).click();
-          }, 500);
-        }
-      }
-
-      // Create and dispatch a change event on the file input to ensure it registers
-      const changeEvent = new Event("change", { bubbles: true });
-      fileInput.dispatchEvent(changeEvent);
-    } catch (error) {
-      console.error("Error handling AshbyHQ resume upload:", error);
+  try {
+    // Handle resume upload
+    if (profile.resumeFile) {
+      const resumeHandled = await handleResumeUpload(profile);
+      filesHandled += resumeHandled;
     }
+
+    // Handle cover letter upload
+    if (profile.coverLetterFile) {
+      const coverLetterHandled = await handleCoverLetterUpload(profile);
+      filesHandled += coverLetterHandled;
+    }
+  } catch (error) {
+    // Silent error handling
   }
 
-  return fieldsHandled;
+  return filesHandled;
+};
+
+/**
+ * Handles resume file upload for AshbyHQ
+ */
+const handleResumeUpload = async (profile: UserProfile): Promise<number> => {
+  try {
+    // Convert dataUrl to File
+    const resumeFile = await dataUrlToFile(
+      profile.resumeFile!.dataUrl,
+      profile.resumeFile!.name
+    );
+
+    if (!resumeFile) {
+      return 0;
+    }
+
+    // Look for resume upload field
+    const resumeField = findResumeField();
+    if (!resumeField) {
+      return 0;
+    }
+
+    // Upload the file
+    await uploadFile(resumeField, resumeFile);
+    return 1;
+  } catch (error) {
+    // Silent error handling
+    return 0;
+  }
+};
+
+/**
+ * Find the resume upload field on AshbyHQ
+ */
+const findResumeField = (): HTMLElement | null => {
+  try {
+    // Method 1: Look for resume field using data attributes
+    const resumeField = document.querySelector('[data-field-type="resume"]');
+    if (resumeField) {
+      return resumeField as HTMLElement;
+    }
+
+    // Method 2: Look for resume field using common class names
+    const resumeFieldByClass = document.querySelector(".resume-field, .resume-upload");
+    if (resumeFieldByClass) {
+      return resumeFieldByClass as HTMLElement;
+    }
+
+    // Method 3: Look for fields with "resume" or "cv" in the label
+    const fieldLabels = document.querySelectorAll(".field-label, label");
+    for (const label of fieldLabels) {
+      const labelText = label.textContent?.toLowerCase() || "";
+      if (labelText.includes("resume") || labelText.includes("cv")) {
+        // Find the closest field container
+        const container = label.closest(".field-container, .upload-field");
+        if (container) {
+          return container as HTMLElement;
+        }
+      }
+    }
+
+    // Method 4: If there's only one upload field, use that
+    const uploadFields = document.querySelectorAll(
+      '.upload-field, [data-field-type="file"]'
+    );
+    if (uploadFields.length === 1) {
+      return uploadFields[0] as HTMLElement;
+    }
+
+    return null;
+  } catch (error) {
+    // Silent error handling
+    return null;
+  }
+};
+
+/**
+ * Handles cover letter file upload for AshbyHQ
+ */
+const handleCoverLetterUpload = async (profile: UserProfile): Promise<number> => {
+  try {
+    // Convert dataUrl to File
+    const coverLetterFile = await dataUrlToFile(
+      profile.coverLetterFile!.dataUrl,
+      profile.coverLetterFile!.name
+    );
+
+    if (!coverLetterFile) {
+      return 0;
+    }
+
+    // Look for cover letter upload field
+    const coverLetterField = findCoverLetterField();
+    if (!coverLetterField) {
+      return 0;
+    }
+
+    // Upload the file
+    await uploadFile(coverLetterField, coverLetterFile);
+    return 1;
+  } catch (error) {
+    // Silent error handling
+    return 0;
+  }
+};
+
+/**
+ * Find the cover letter upload field on AshbyHQ
+ */
+const findCoverLetterField = (): HTMLElement | null => {
+  try {
+    // Method 1: Look for cover letter field using data attributes
+    const coverLetterField = document.querySelector('[data-field-type="cover_letter"]');
+    if (coverLetterField) {
+      return coverLetterField as HTMLElement;
+    }
+
+    // Method 2: Look for cover letter field using common class names
+    const coverLetterFieldByClass = document.querySelector(
+      ".cover-letter-field, .cover-letter-upload"
+    );
+    if (coverLetterFieldByClass) {
+      return coverLetterFieldByClass as HTMLElement;
+    }
+
+    // Method 3: Look for fields with "cover letter" in the label
+    const fieldLabels = document.querySelectorAll(".field-label, label");
+    for (const label of fieldLabels) {
+      const labelText = label.textContent?.toLowerCase() || "";
+      if (labelText.includes("cover letter")) {
+        // Find the closest field container
+        const container = label.closest(".field-container, .upload-field");
+        if (container) {
+          return container as HTMLElement;
+        }
+      }
+    }
+
+    return null;
+  } catch (error) {
+    // Silent error handling
+    return null;
+  }
+};
+
+/**
+ * Helper function to upload a file to a field
+ */
+const uploadFile = async (fieldContainer: HTMLElement, file: File): Promise<void> => {
+  try {
+    // Find file input within container
+    const fileInput = fieldContainer.querySelector(
+      'input[type="file"]'
+    ) as HTMLInputElement;
+    if (!fileInput) {
+      return;
+    }
+
+    // Create DataTransfer and assign file
+    const dataTransfer = new DataTransfer();
+    dataTransfer.items.add(file);
+    fileInput.files = dataTransfer.files;
+
+    // Dispatch events
+    const events = ["change", "input"];
+    for (const eventType of events) {
+      const event = new Event(eventType, { bubbles: true });
+      fileInput.dispatchEvent(event);
+    }
+
+    // Check if there's an upload button to click
+    const uploadButton = fieldContainer.querySelector("button");
+    if (uploadButton) {
+      uploadButton.click();
+    }
+  } catch (error) {
+    // Silent error handling
+  }
 };

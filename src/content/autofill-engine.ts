@@ -1,4 +1,3 @@
-import { UserProfile } from "../types";
 import { mapProfileToFields } from "../utils/fieldMapper";
 import { fillFormField } from "../utils/field-fillers";
 import { handleStandardFileUploads } from "./handlers/file-upload-handler";
@@ -12,22 +11,15 @@ export const executeAutofill = async (): Promise<{
   success: boolean;
   message: string;
 }> => {
-  console.log("Autofill action triggered");
-
   // Get the user profile from storage
   const profile = await import("../storage/userProfile")
     .then((m) => m.getUserProfile())
-    .catch((err) => {
-      console.error("Error loading profile module:", err);
-      return null;
-    });
+    .catch(() => null);
 
   if (!profile) {
-    console.warn("No user profile found. Cannot autofill.");
     return { success: false, message: "Profile not found" };
   }
 
-  console.log("Using profile:", profile);
   const hostname = window.location.hostname;
   const fieldMappings = mapProfileToFields(profile, hostname);
   let fieldsFilled = 0;
@@ -42,26 +34,7 @@ export const executeAutofill = async (): Promise<{
       if (filled) {
         fieldsFilled++;
       } else {
-        console.warn(`Could not find or fill field mapped to profile key: ${fieldName}`);
         fieldsNotFound++;
-      }
-    }
-  }
-
-  // Log profile fields that *exist* but had *no mapping* defined for them
-  for (const key in profile) {
-    if (
-      Object.prototype.hasOwnProperty.call(profile, key) &&
-      !processedProfileKeys.has(key) &&
-      key !== "resumeFile" &&
-      key !== "coverLetterFile" &&
-      key !== "customQA"
-    ) {
-      const profileKey = key as keyof UserProfile;
-      if (profile[profileKey]) {
-        console.warn(
-          `Profile has data for key "${key}", but no mapping was defined in fieldMapper.ts`
-        );
       }
     }
   }
@@ -71,20 +44,15 @@ export const executeAutofill = async (): Promise<{
   const matchedSite = findSiteHandler(hostname);
 
   if (matchedSite) {
-    console.log(`${matchedSite.name} detected - using specific handler`);
     siteSpecificFieldsHandled = await matchedSite.handler(profile);
     fieldsFilled += siteSpecificFieldsHandled;
   } else {
     // Default handler for sites without specific implementations
-    console.log("No specific handler for this site, using standard approach");
     const standardFieldsHandled = await handleStandardFileUploads(profile);
     fieldsFilled += standardFieldsHandled;
   }
 
-  // TODO: Handle Custom Q&A (requires more complex logic to find matching question fields)
-
   const message = `Autofill complete. Fields filled: ${fieldsFilled}. Fields not found: ${fieldsNotFound}.`;
-  console.log(message);
 
   return { success: true, message };
 };
