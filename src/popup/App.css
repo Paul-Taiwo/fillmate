@@ -1,0 +1,153 @@
+/* Add styles for the popup here */
+
+.app-container {
+  width: 100%;
+  max-width: 450px; /* Max width for better readability */
+  margin: 0 auto;
+}
+
+h1,
+h2 {
+  color: #333;
+  margin-bottom: 15px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 5px;
+}
+
+h1 {
+  text-align: center;
+  margin-top: 0;
+}
+
+/* Actions bar with buttons */
+.actions-bar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 15px;
+}
+
+.open-window-button {
+  background-color: #28a745;
+  padding: 8px 12px;
+  font-size: 13px;
+  border-radius: 4px;
+  cursor: pointer;
+  border: none;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.open-window-button:hover {
+  background-color: #218838;
+}
+
+label {
+  display: block;
+  margin-bottom: 10px;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="tel"],
+input[type="url"],
+select,
+textarea {
+  width: calc(100% - 12px); /* Adjust width considering padding */
+  padding: 8px;
+  margin-top: 4px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+textarea {
+  min-height: 60px;
+  resize: vertical;
+}
+
+input[type="file"] {
+  margin-top: 4px;
+}
+
+button {
+  padding: 10px 15px;
+  margin-top: 10px;
+  margin-right: 10px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s ease;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+button[type="button"] {
+  background-color: #6c757d;
+}
+
+button[type="button"]:hover {
+  background-color: #5a6268;
+}
+
+.custom-qa-item {
+  border: 1px dashed #ddd;
+  padding: 10px;
+  margin-bottom: 15px;
+  border-radius: 4px;
+}
+
+.custom-qa-item textarea {
+  margin-bottom: 8px;
+}
+
+.custom-qa-item button {
+  background-color: #dc3545;
+  font-size: 12px;
+  padding: 5px 10px;
+}
+
+.custom-qa-item button:hover {
+  background-color: #c82333;
+}
+
+.status-message {
+  margin-top: 15px;
+  padding: 10px;
+  border-radius: 4px;
+  font-weight: bold;
+  text-align: center;
+}
+
+/* Example: Style based on content */
+.status-message:contains("successfully") {
+  background-color: #d4edda; /* Greenish for success */
+  color: #155724;
+}
+
+.status-message:contains("Error") {
+  background-color: #f8d7da; /* Reddish for error */
+  color: #721c24;
+}
+
+.status-message:contains("Saving...") {
+  background-color: #fff3cd; /* Yellowish for loading */
+  color: #856404;
+}
+
+/* Style file input spans */
+label span {
+  margin-left: 10px;
+  font-style: italic;
+  font-weight: normal;
+  color: #555;
+  font-size: 12px;
+}

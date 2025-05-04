@@ -1,0 +1,58 @@
+{
+  "manifest_version": 3,
+  "name": "Job Application Autofill",
+  "version": "1.0.0",
+  "description": "Autofills job applications on various platforms.",
+  "permissions": [
+    "storage",
+    "activeTab",
+    "scripting",
+    "windows"
+  ],
+  "background": {
+    "service_worker": "src/background/index.ts",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*/*"
+      ],
+      "js": [
+        "src/content/autofill.ts"
+      ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "*://*.linkedin.com/*",
+        "*://*.greenhouse.io/*",
+        "*://*.lever.co/*",
+        "*://*.ashbyhq.com/*",
+        "*://wellfound.com/*",
+        "*://boards.greenhouse.io/*",
+        "*://jobs.lever.co/*"
+      ],
+      "js": [
+        "src/sidebar/index.tsx"
+      ],
+      "css": [],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_popup": "src/popup/index.html"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "src/sidebar/Sidebar.tsx",
+        "src/sidebar/index.tsx",
+        "src/popup/index.html"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
+    }
+  ]
+}
