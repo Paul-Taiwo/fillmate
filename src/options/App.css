@@ -183,3 +183,72 @@ button[type="submit"]:hover {
 }
 
 /* Existing styles for the rest of the form */
+
+.two-column-layout {
+  display: flex;
+  gap: 2rem;
+  width: 100%;
+}
+
+.left-column {
+  flex: 1;
+}
+
+.right-column {
+  flex: 2;
+}
+
+/* Ensure sections have proper spacing */
+.section {
+  margin-bottom: 1.5rem;
+}
+
+/* Make form inputs take full width of their container */
+.section label {
+  display: block;
+  margin-bottom: 0.75rem;
+}
+
+.section input,
+.section select,
+.section textarea {
+  width: 100%;
+  margin-top: 0.25rem;
+}
+
+/* Two-column layout for form fields */
+.form-row {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.form-group {
+  flex: 1;
+}
+
+/* Responsive adjustment for small screens */
+@media (max-width: 768px) {
+  .form-row {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}
+
+/* Update label styles for the new layout */
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+.form-group input,
+.form-group select {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Adjust section container */
+.section-container {
+  margin-bottom: 2rem;
+}

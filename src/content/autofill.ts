@@ -40,5 +40,4 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     console.warn("Received unknown message action:", message.action);
   }
 });
-
 console.log("***** Autofill content script finished executing. *****");
