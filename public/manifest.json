@@ -43,12 +43,14 @@
   "action": {
     "default_popup": "src/popup/index.html"
   },
+  "options_page": "src/options/index.html",
   "web_accessible_resources": [
     {
       "resources": [
         "src/sidebar/Sidebar.tsx",
         "src/sidebar/index.tsx",
-        "src/popup/index.html"
+        "src/popup/index.html",
+        "src/options/index.html"
       ],
       "matches": [
         "<all_urls>"

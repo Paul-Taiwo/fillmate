@@ -1,22 +1,39 @@
 /* Add styles for the popup here */
 
 .app-container {
-  width: 100%;
-  max-width: 450px; /* Max width for better readability */
-  margin: 0 auto;
-}
-
-h1,
-h2 {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   color: #333;
-  margin-bottom: 15px;
-  border-bottom: 1px solid #eee;
-  padding-bottom: 5px;
+  padding: 20px;
+  text-align: center;
+  width: 300px;
 }
 
 h1 {
-  text-align: center;
-  margin-top: 0;
+  color: #2c3e50;
+  margin-bottom: 1rem;
+  font-size: 1.5rem;
+}
+
+p {
+  margin-bottom: 1.5rem;
+  line-height: 1.4;
+  color: #555;
+}
+
+.settings-button {
+  background-color: #3498db;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  width: 100%;
+}
+
+.settings-button:hover {
+  background-color: #2980b9;
 }
 
 /* Actions bar with buttons */
