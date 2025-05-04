@@ -1,9 +1,8 @@
 import { UserProfile } from "../types";
 import { mapProfileToFields } from "../utils/fieldMapper";
 import { fillFormField } from "../utils/field-fillers";
-import { handleAshbyHqFileUploads, handleAshbyHqCustomFields } from "./handlers/ashbyhq";
-import { handleGreenhouseCustomFields } from "./handlers/greenhouse";
 import { handleStandardFileUploads } from "./handlers/file-upload-handler";
+import { findSiteHandler } from "./site-handlers";
 
 /**
  * Main autofill logic - fills in form fields based on profile data
@@ -67,30 +66,19 @@ export const executeAutofill = async (): Promise<{
     }
   }
 
-  // Handle site-specific processing based on hostname
-  if (hostname.includes("ashbyhq.com")) {
-    console.log("AshbyHQ detected - using special handlers");
+  // Find and execute site-specific handler based on hostname
+  let siteSpecificFieldsHandled = 0;
+  const matchedSite = findSiteHandler(hostname);
 
-    // Handle custom field filling first
-    const ashbyCustomFieldsHandled = await handleAshbyHqCustomFields(profile);
-    fieldsFilled += ashbyCustomFieldsHandled;
-
-    // Then handle file uploads
-    const ashbyFileFieldsHandled = await handleAshbyHqFileUploads(profile);
-    fieldsFilled += ashbyFileFieldsHandled;
-  } else if (
-    hostname.includes("greenhouse.io") ||
-    hostname.includes("boards.greenhouse.io")
-  ) {
-    console.log("Greenhouse detected - using special handlers");
-
-    // Use dedicated Greenhouse handler which handles both fields and file uploads
-    const greenhouseFieldsHandled = await handleGreenhouseCustomFields(profile);
-    fieldsFilled += greenhouseFieldsHandled;
+  if (matchedSite) {
+    console.log(`${matchedSite.name} detected - using specific handler`);
+    siteSpecificFieldsHandled = await matchedSite.handler(profile);
+    fieldsFilled += siteSpecificFieldsHandled;
   } else {
-    // Handle File Uploads for non-specific sites using standard approach
-    const standardFileFieldsHandled = await handleStandardFileUploads(profile);
-    fieldsFilled += standardFileFieldsHandled;
+    // Default handler for sites without specific implementations
+    console.log("No specific handler for this site, using standard approach");
+    const standardFieldsHandled = await handleStandardFileUploads(profile);
+    fieldsFilled += standardFieldsHandled;
   }
 
   // TODO: Handle Custom Q&A (requires more complex logic to find matching question fields)
