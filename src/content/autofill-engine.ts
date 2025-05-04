@@ -1,10 +1,7 @@
 import { UserProfile } from "../types";
 import { mapProfileToFields } from "../utils/fieldMapper";
 import { fillFormField } from "../utils/field-fillers";
-import {
-  handleAshbyHqFileUploads,
-  handleAshbyHqCustomFields,
-} from "./handlers/ashbyhq-handler";
+import { handleAshbyHqFileUploads, handleAshbyHqCustomFields } from "./handlers/ashbyhq";
 import { handleStandardFileUploads } from "./handlers/file-upload-handler";
 
 /**

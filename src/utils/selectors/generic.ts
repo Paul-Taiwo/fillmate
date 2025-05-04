@@ -70,4 +70,22 @@ export const genericSelectors: MappedFields = {
     selectors: [{ label: /gender|sex/i }, { name: /gender|sex/i }, { id: /gender|sex/i }],
     value: undefined,
   },
+  noticePeriod: {
+    selectors: [
+      { label: /notice period|current notice|notice/i },
+      { name: /notice period|notice/i },
+      { id: /notice period|notice/i },
+      { placeholder: /notice period|notice/i },
+    ],
+    value: undefined,
+  },
+  howDidYouHear: {
+    selectors: [
+      { label: /how did you hear|how.*find|source|referral source/i },
+      { name: /how did you hear|how.*find|source|referral/i },
+      { id: /how did you hear|how.*find|source|referral/i },
+      { placeholder: /how did you hear|how.*find|source|referral/i },
+    ],
+    value: undefined,
+  },
 };

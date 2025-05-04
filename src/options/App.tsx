@@ -16,6 +16,8 @@ const App: React.FC = () => {
     location: "",
     visaStatus: "",
     gender: "",
+    noticePeriod: "",
+    howDidYouHear: "",
     customQA: [{ question: "", answer: "" }],
   });
   const [isLoading, setIsLoading] = useState(true);
@@ -42,6 +44,36 @@ const App: React.FC = () => {
   ) => {
     const { name, value } = e.target;
     setProfile((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSourceCheckboxChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const { name, checked } = e.target;
+
+    setProfile((prev) => {
+      // Simple approach: just store as comma-separated without spaces
+      const currentSources = prev.howDidYouHear
+        ? prev.howDidYouHear
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean)
+        : [];
+
+      // Add or remove the selected source
+      let newSources;
+      if (checked) {
+        if (!currentSources.includes(name)) {
+          newSources = [...currentSources, name];
+        } else {
+          newSources = currentSources;
+        }
+      } else {
+        newSources = currentSources.filter((source) => source !== name);
+      }
+
+      const newSourcesString = newSources.join(",");
+
+      return { ...prev, howDidYouHear: newSourcesString };
+    });
   };
 
   const handleFileChange = (
@@ -229,20 +261,202 @@ const App: React.FC = () => {
             <option value='prefer-not-to-say'>Prefer not to say</option>
           </select>
         </label>
-        <label>
-          Visa Requirement:
-          <select
-            name='visaStatus'
-            value={profile.visaStatus}
-            onChange={handleInputChange}>
-            <option value=''>Select...</option>
-            <option value='requires_sponsorship'>Requires Sponsorship</option>
-            <option value='does_not_require_sponsorship'>
-              Does Not Require Sponsorship
-            </option>
-            <option value='unknown'>Unknown</option>
-          </select>
-        </label>
+
+        <div className='radio-group'>
+          <label className='radio-group-label'>Visa Requirement:</label>
+          <div className='radio-options'>
+            <label>
+              <input
+                type='radio'
+                name='visaStatus'
+                value='does_not_require_sponsorship'
+                checked={profile.visaStatus === "does_not_require_sponsorship"}
+                onChange={handleInputChange}
+              />
+              No, I don't require sponsorship
+            </label>
+            <label>
+              <input
+                type='radio'
+                name='visaStatus'
+                value='requires_sponsorship'
+                checked={profile.visaStatus === "requires_sponsorship"}
+                onChange={handleInputChange}
+              />
+              Yes, I require sponsorship
+            </label>
+            <label>
+              <input
+                type='radio'
+                name='visaStatus'
+                value='unknown'
+                checked={profile.visaStatus === "unknown"}
+                onChange={handleInputChange}
+              />
+              Not specified
+            </label>
+          </div>
+        </div>
+
+        <div className='radio-group'>
+          <label className='radio-group-label'>Notice Period:</label>
+          <div className='radio-options'>
+            <label>
+              <input
+                type='radio'
+                name='noticePeriod'
+                value='Immediately available'
+                checked={profile.noticePeriod === "Immediately available"}
+                onChange={handleInputChange}
+              />
+              Immediately available
+            </label>
+            <label>
+              <input
+                type='radio'
+                name='noticePeriod'
+                value='1 month'
+                checked={profile.noticePeriod === "1 month"}
+                onChange={handleInputChange}
+              />
+              1 month
+            </label>
+            <label>
+              <input
+                type='radio'
+                name='noticePeriod'
+                value='2 months'
+                checked={profile.noticePeriod === "2 months"}
+                onChange={handleInputChange}
+              />
+              2 months
+            </label>
+            <label>
+              <input
+                type='radio'
+                name='noticePeriod'
+                value='3 months or more'
+                checked={profile.noticePeriod === "3 months or more"}
+                onChange={handleInputChange}
+              />
+              3 months or more
+            </label>
+          </div>
+        </div>
+
+        <div className='checkbox-group'>
+          <label className='checkbox-group-label'>How Did You Hear About Us?</label>
+          <div className='checkbox-options'>
+            <label>
+              <input
+                type='checkbox'
+                name='LinkedIn'
+                checked={profile.howDidYouHear
+                  .split(",")
+                  .map((s) => s.trim())
+                  .includes("LinkedIn")}
+                onChange={handleSourceCheckboxChange}
+              />
+              LinkedIn
+            </label>
+            <label>
+              <input
+                type='checkbox'
+                name='Twitter'
+                checked={profile.howDidYouHear
+                  .split(",")
+                  .map((s) => s.trim())
+                  .includes("Twitter")}
+                onChange={handleSourceCheckboxChange}
+              />
+              Twitter
+            </label>
+            <label>
+              <input
+                type='checkbox'
+                name='Job Board'
+                checked={profile.howDidYouHear
+                  .split(",")
+                  .map((s) => s.trim())
+                  .includes("Job Board")}
+                onChange={handleSourceCheckboxChange}
+              />
+              Job Board
+            </label>
+            <label>
+              <input
+                type='checkbox'
+                name='Glassdoor'
+                checked={profile.howDidYouHear
+                  .split(",")
+                  .map((s) => s.trim())
+                  .includes("Glassdoor")}
+                onChange={handleSourceCheckboxChange}
+              />
+              Glassdoor
+            </label>
+            <label>
+              <input
+                type='checkbox'
+                name='Family / Friends'
+                checked={profile.howDidYouHear
+                  .split(",")
+                  .map((s) => s.trim())
+                  .includes("Family / Friends")}
+                onChange={handleSourceCheckboxChange}
+              />
+              Family / Friends
+            </label>
+            <label>
+              <input
+                type='checkbox'
+                name='News / Media'
+                checked={profile.howDidYouHear
+                  .split(",")
+                  .map((s) => s.trim())
+                  .includes("News / Media")}
+                onChange={handleSourceCheckboxChange}
+              />
+              News / Media
+            </label>
+            <label>
+              <input
+                type='checkbox'
+                name='Event / Conference'
+                checked={profile.howDidYouHear
+                  .split(",")
+                  .map((s) => s.trim())
+                  .includes("Event / Conference")}
+                onChange={handleSourceCheckboxChange}
+              />
+              Event / Conference
+            </label>
+            <label>
+              <input
+                type='checkbox'
+                name='Company Website'
+                checked={profile.howDidYouHear
+                  .split(",")
+                  .map((s) => s.trim())
+                  .includes("Company Website")}
+                onChange={handleSourceCheckboxChange}
+              />
+              Company Website
+            </label>
+            <label>
+              <input
+                type='checkbox'
+                name='Other'
+                checked={profile.howDidYouHear
+                  .split(",")
+                  .map((s) => s.trim())
+                  .includes("Other")}
+                onChange={handleSourceCheckboxChange}
+              />
+              Other
+            </label>
+          </div>
+        </div>
 
         <h2>Documents</h2>
         <label>

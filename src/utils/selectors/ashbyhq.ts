@@ -92,4 +92,29 @@ export const ashbyHqSelectors: MappedFields = {
     ],
     value: undefined,
   },
+  noticePeriod: {
+    selectors: [
+      { label: /Notice Period|Current Notice|Notice/i },
+      { name: /noticePeriod|notice/i },
+      { placeholder: /Notice Period|How much notice/i },
+      { selector: 'div._fieldEntry_hkyf8_29 input[placeholder*="notice" i]' },
+      { selector: 'label[for*="notice" i] ~ div input' },
+      { selector: 'div[class*="fieldEntry"] input[name*="notice" i]' },
+    ],
+    value: undefined,
+  },
+  howDidYouHear: {
+    selectors: [
+      { label: /How did you hear|Source|Referral|How did you find/i },
+      { name: /howDidYouHear|source|referral/i },
+      { placeholder: /How did you hear|Source|Referral/i },
+      { selector: 'div._fieldEntry_hkyf8_29 select[id*="source" i]' },
+      { selector: 'div._fieldEntry_hkyf8_29 select[id*="referral" i]' },
+      { selector: 'label[for*="source" i] ~ div select' },
+      { selector: 'label[for*="referral" i] ~ div select' },
+      { selector: 'div[class*="fieldEntry"] select[id*="source" i]' },
+      { selector: 'div[class*="dropdownContainer"] div[role="button"]' },
+    ],
+    value: undefined,
+  },
 };

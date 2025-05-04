@@ -36,11 +36,11 @@ const triggerAutofill = () => {
     } else {
       console.log("Autofill message sent, response:", response);
       // Handle response (e.g., show notification based on response.success)
-      if (response?.success) {
-        alert("Autofill successful! " + (response.message || "")); // Simple alert for now
-      } else {
-        alert("Autofill failed. " + (response?.message || "Check console for details."));
-      }
+      // if (response?.success) {
+      //   alert("Autofill successful! " + (response.message || "")); // Simple alert for now
+      // } else {
+      //   alert("Autofill failed. " + (response?.message || "Check console for details."));
+      // }
     }
   });
 };
