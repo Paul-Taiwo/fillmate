@@ -118,7 +118,6 @@ export const handleAshbyHqBasicFields = async (profile: UserProfile): Promise<nu
         document.querySelector('label[for*="location" i] ~ div input');
 
       if (locationField instanceof HTMLInputElement) {
-        console.log("Found location field:", locationField);
         locationField.value = profile.location;
         locationField.dispatchEvent(new Event("input", { bubbles: true }));
         locationField.dispatchEvent(new Event("change", { bubbles: true }));
@@ -126,36 +125,114 @@ export const handleAshbyHqBasicFields = async (profile: UserProfile): Promise<nu
       } else {
         // Try finding by label - scan all labels for location-related text
         const locationLabels = Array.from(document.querySelectorAll("label")).filter(
-          (label) =>
-            label.textContent?.toLowerCase().includes("location") ||
-            label.textContent?.toLowerCase().includes("city")
+          (label) => {
+            const text = label.textContent?.toLowerCase() || "";
+            return (
+              text.includes("location") ||
+              text.includes("city") ||
+              text.includes("country") ||
+              text.includes("residence")
+            );
+          }
         );
 
         for (const label of locationLabels) {
+          let handled = false;
+
           // Try to find input near this label
           if (label.htmlFor) {
-            const inputByFor = document.getElementById(label.htmlFor);
-            if (inputByFor && inputByFor instanceof HTMLInputElement) {
-              inputByFor.value = profile.location;
-              inputByFor.dispatchEvent(new Event("input", { bubbles: true }));
-              inputByFor.dispatchEvent(new Event("change", { bubbles: true }));
+            const inputElement = document.getElementById(label.htmlFor);
+
+            // Handle regular input
+            if (inputElement instanceof HTMLInputElement) {
+              inputElement.value = profile.location;
+              inputElement.dispatchEvent(new Event("input", { bubbles: true }));
+              inputElement.dispatchEvent(new Event("change", { bubbles: true }));
               fieldsHandled++;
-              break;
+              handled = true;
+            }
+
+            // Handle combobox/dropdown pattern from AshbyHQ
+            if (!handled) {
+              // Look for the container that has the input + button combination
+              const container =
+                document.querySelector(
+                  `div._inputContainer_v5ami_28[id="${label.htmlFor}"]`
+                ) ||
+                label
+                  .closest("div._fieldEntry_hkyf8_29")
+                  ?.querySelector("div._inputContainer_v5ami_28") ||
+                inputElement?.closest("div._inputContainer_v5ami_28");
+
+              if (container) {
+                const comboboxInput =
+                  container.querySelector('input[role="combobox"]') ||
+                  container.querySelector("input");
+
+                if (comboboxInput instanceof HTMLInputElement) {
+                  // Enter the location value
+                  comboboxInput.value = profile.location;
+                  comboboxInput.dispatchEvent(new Event("input", { bubbles: true }));
+                  comboboxInput.dispatchEvent(new Event("change", { bubbles: true }));
+
+                  // Click the dropdown button to show options
+                  const dropdownButton =
+                    container.querySelector("button._toggleButton_v5ami_32") ||
+                    container.querySelector("button");
+
+                  if (dropdownButton instanceof HTMLElement) {
+                    // Click to open the dropdown
+                    dropdownButton.click();
+
+                    // Wait for dropdown and then select the first option
+                    setTimeout(() => {
+                      const options =
+                        document.querySelectorAll('li[role="option"]') ||
+                        document.querySelectorAll('div[role="option"]');
+
+                      // Click the first option that contains our text
+                      for (const option of options) {
+                        if (
+                          option instanceof HTMLElement &&
+                          option.textContent
+                            ?.toLowerCase()
+                            .includes(profile.location.toLowerCase())
+                        ) {
+                          option.click();
+                          break;
+                        }
+                      }
+
+                      // If no match found, click the first option
+                      if (options.length > 0 && options[0] instanceof HTMLElement) {
+                        options[0].click();
+                      }
+                    }, 500);
+
+                    fieldsHandled++;
+                    handled = true;
+                  }
+                }
+              }
             }
           }
 
-          // Look for input in the next element
-          const container = label.nextElementSibling;
-          if (container) {
-            const input = container.querySelector("input");
-            if (input instanceof HTMLInputElement) {
-              input.value = profile.location;
-              input.dispatchEvent(new Event("input", { bubbles: true }));
-              input.dispatchEvent(new Event("change", { bubbles: true }));
-              fieldsHandled++;
-              break;
+          // If we haven't handled it yet, check the next element
+          if (!handled) {
+            const container = label.nextElementSibling;
+            if (container) {
+              const input = container.querySelector("input");
+              if (input instanceof HTMLInputElement) {
+                input.value = profile.location;
+                input.dispatchEvent(new Event("input", { bubbles: true }));
+                input.dispatchEvent(new Event("change", { bubbles: true }));
+                fieldsHandled++;
+                handled = true;
+              }
             }
           }
+
+          if (handled) break;
         }
       }
     }

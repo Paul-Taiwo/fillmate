@@ -15,317 +15,336 @@ export const handleAshbyHqRadioFields = async (profile: UserProfile): Promise<nu
     const normalizedNoticePeriod = getAshbyHqNoticePeriod(profile.noticePeriod);
     console.log("Normalized for AshbyHQ:", normalizedNoticePeriod);
 
-    // First try the exact structure shown in the HTML
-    const noticePeriodFieldset = document.querySelector(
+    // Step 1: Find all fieldsets with matching class names from the examples
+    const fieldsets = document.querySelectorAll(
       'fieldset[class*="_container_"][class*="_fieldEntry_"]'
     );
+    console.log(`Found ${fieldsets.length} fieldsets with matching class pattern`);
 
-    if (noticePeriodFieldset) {
-      // Verify it's the notice period fieldset by checking the label
-      const fieldsetLabel = noticePeriodFieldset.querySelector(
-        "label.ashby-application-form-question-title"
+    // Step 2: Filter fieldsets to those with notice period labels
+    const noticePeriodFieldsets = Array.from(fieldsets).filter((fieldset) => {
+      const label = fieldset.querySelector(
+        'label[class*="_label_"][class*="ashby-application-form-question-title"]'
       );
+      if (!label) return false;
 
-      if (
-        fieldsetLabel &&
-        fieldsetLabel.textContent?.toLowerCase().includes("notice period")
-      ) {
-        console.log(
-          "Found notice period fieldset with exact structure:",
-          fieldsetLabel.textContent
-        );
+      const labelText = label.textContent?.toLowerCase() || "";
+      return (
+        labelText.includes("notice period") ||
+        labelText.includes("notice") ||
+        labelText.includes("begin working")
+      );
+    });
 
-        // Get all the radio options with their labels
-        const optionDivs = noticePeriodFieldset.querySelectorAll(
-          'div[class*="_option_"]'
-        );
-        console.log(`Found ${optionDivs.length} notice period options`);
-
-        // Log all available option labels for debugging
-        optionDivs.forEach((optionDiv) => {
-          const label = optionDiv.querySelector('label[class*="_label_"]');
-          console.log(`Option: ${label?.textContent}`);
-        });
-
-        // Normalize the user's notice period value
-        const userNotice = normalizedNoticePeriod.toLowerCase().trim();
-        console.log("Normalized user notice period:", userNotice);
-
-        // Find the matching option
-        let optionToSelect = null;
-        let optionLabel = "";
-
-        for (const optionDiv of optionDivs) {
-          const label = optionDiv.querySelector('label[class*="_label_"]');
-          const input = optionDiv.querySelector('input[type="radio"]');
-
-          if (label && input) {
-            const labelText = label.textContent?.toLowerCase().trim() || "";
-            console.log(`Comparing: "${labelText}" with "${userNotice}"`);
-
-            // Exact match
-            if (labelText === userNotice) {
-              console.log(`✓ Exact match found: "${labelText}"`);
-              optionToSelect = input;
-              optionLabel = labelText;
-              break;
-            }
-
-            // Include match
-            if (labelText.includes(userNotice) || userNotice.includes(labelText)) {
-              console.log(
-                `✓ Include match found: "${labelText}" contains or is contained in "${userNotice}"`
-              );
-              optionToSelect = input;
-              optionLabel = labelText;
-              break;
-            }
-
-            // Special cases
-            if (
-              (userNotice === "immediately available" ||
-                userNotice.includes("immediate") ||
-                userNotice.includes("available") ||
-                userNotice === "0" ||
-                userNotice === "asap") &&
-              labelText.includes("immediately")
-            ) {
-              console.log(`✓ Special match found for "immediately available"`);
-              optionToSelect = input;
-              optionLabel = labelText;
-              break;
-            }
-
-            if (
-              (userNotice === "1 month" ||
-                userNotice.includes("1 month") ||
-                userNotice.includes("one month") ||
-                userNotice === "1" ||
-                userNotice === "one") &&
-              labelText.includes("1 month")
-            ) {
-              console.log(`✓ Special match found for "1 month"`);
-              optionToSelect = input;
-              optionLabel = labelText;
-              break;
-            }
-
-            if (
-              (userNotice === "2 months" ||
-                userNotice.includes("2 month") ||
-                userNotice.includes("two month") ||
-                userNotice === "2" ||
-                userNotice === "two") &&
-              labelText.includes("2 month")
-            ) {
-              console.log(`✓ Special match found for "2 months"`);
-              optionToSelect = input;
-              optionLabel = labelText;
-              break;
-            }
-
-            if (
-              (userNotice === "3 months or more" ||
-                userNotice.includes("3 month") ||
-                userNotice.includes("three month") ||
-                userNotice.includes("more") ||
-                userNotice === "3" ||
-                userNotice === "three") &&
-              labelText.includes("3 month")
-            ) {
-              console.log(`✓ Special match found for "3 months or more"`);
-              optionToSelect = input;
-              optionLabel = labelText;
-              break;
-            }
-          }
-        }
-
-        // Select the option
-        if (optionToSelect instanceof HTMLInputElement) {
-          console.log(`Selecting notice period option: "${optionLabel}"`);
-          console.log(
-            `Radio button id: ${optionToSelect.id}, name: ${optionToSelect.name}`
-          );
-
-          optionToSelect.checked = true;
-          console.log(`Set checked = true`);
-
-          optionToSelect.click(); // Some implementations require a click
-          console.log(`Clicked the radio input`);
-
-          optionToSelect.dispatchEvent(new Event("change", { bubbles: true }));
-          console.log(`Dispatched change event`);
-
-          // Also try clicking the label to handle custom radio implementations
-          const labelFor = optionToSelect.id;
-          if (labelFor) {
-            const associatedLabel = document.querySelector(`label[for="${labelFor}"]`);
-            if (associatedLabel instanceof HTMLElement) {
-              console.log(`Found associated label for=${labelFor}, will click it`);
-              setTimeout(() => {
-                associatedLabel.click();
-                console.log(`Clicked the associated label`);
-              }, 100);
-            }
-          }
-
-          fieldsHandled++;
-          console.log(`Successfully handled notice period field`);
-          return fieldsHandled;
-        } else {
-          console.warn("No matching option found for notice period");
-          // Log the available options again for clarification
-          console.log("Available options:");
-          optionDivs.forEach((optionDiv) => {
-            const label = optionDiv.querySelector('label[class*="_label_"]');
-            console.log(`- ${label?.textContent}`);
-          });
-        }
-      } else {
-        console.log(
-          "Found fieldset but it's not for notice period:",
-          fieldsetLabel ? fieldsetLabel.textContent : "no label found"
-        );
-      }
-    } else {
-      console.log("Could not find notice period fieldset with the exact structure");
-    }
-
-    // Fallback to more generic detection if the exact structure didn't work
-    console.log("Falling back to generic notice period detection");
-
-    // Look for any fieldset with a label containing "notice period"
-    const noticeFieldsets = Array.from(document.querySelectorAll("fieldset")).filter(
-      (fieldset) => {
-        const label = fieldset.querySelector("label");
-        return label && label.textContent?.toLowerCase().includes("notice period");
-      }
+    console.log(
+      `Found ${noticePeriodFieldsets.length} fieldsets with notice period labels`
     );
 
-    console.log(`Found ${noticeFieldsets.length} fieldsets with notice period label`);
+    // Map of normalized values to what they might appear as in different forms
+    const matchingMap = {
+      "immediately available": [
+        "immediately available",
+        "available immediately",
+        "immediate",
+        "available",
+      ],
+      "1 month": ["1 month", "2 - 4 weeks", "2-4 weeks", "2 to 4 weeks", "one month"],
+      "2 months": ["2 months", "4 - 8 weeks", "4-8 weeks", "4 to 8 weeks", "two months"],
+      "3 months or more": [
+        "3 months or more",
+        "8 weeks +",
+        "8 weeks+",
+        "8+",
+        "three months",
+      ],
+    };
 
-    for (const fieldset of noticeFieldsets) {
-      // Find all radio inputs in this fieldset
-      const radioInputs = fieldset.querySelectorAll('input[type="radio"]');
+    // Step 3: Process each matching fieldset
+    for (const fieldset of noticePeriodFieldsets) {
+      console.log("Processing notice period fieldset");
 
-      if (radioInputs.length > 0) {
-        console.log(`Found ${radioInputs.length} radio inputs in notice period fieldset`);
+      // Step 4: Find all radio inputs and their labels in this fieldset
+      const options = Array.from(fieldset.querySelectorAll('div[class*="_option_"]'));
 
-        // Try to find labels for each radio
-        const userNotice = normalizedNoticePeriod.toLowerCase().trim();
-        let selectedInput = null;
+      if (options.length === 0) {
+        console.log("No option divs found in this fieldset");
+        continue;
+      }
 
-        for (const input of radioInputs) {
-          if (input.id) {
-            const label = document.querySelector(`label[for="${input.id}"]`);
-            if (label) {
-              const labelText = label.textContent?.toLowerCase().trim() || "";
-              console.log(`Checking radio option: "${labelText}"`);
+      console.log(`Found ${options.length} option divs`);
 
-              // Check for matches using the same logic as above
-              if (
-                labelText === userNotice ||
-                labelText.includes(userNotice) ||
-                userNotice.includes(labelText)
-              ) {
-                console.log(`Match found: "${labelText}"`);
-                selectedInput = input;
-                break;
-              }
+      // Step 5: Validate the structure of radio options
+      const validOptions = options.filter((option) => {
+        const radio = option.querySelector('input[type="radio"]');
+        const label = option.querySelector(`label[class*="_label_"]`);
+        return radio && label;
+      });
 
-              // Special cases
-              if (
-                (userNotice === "immediately available" ||
-                  userNotice.includes("immediate") ||
-                  userNotice.includes("available") ||
-                  userNotice === "0" ||
-                  userNotice === "asap") &&
-                labelText.includes("immediately")
-              ) {
-                console.log(`Special match found for "immediately available"`);
-                selectedInput = input;
-                break;
-              }
+      if (validOptions.length === 0) {
+        console.log("No valid radio options found");
+        continue;
+      }
 
-              if (
-                (userNotice === "1 month" ||
-                  userNotice.includes("1 month") ||
-                  userNotice.includes("one month") ||
-                  userNotice === "1" ||
-                  userNotice === "one") &&
-                labelText.includes("1 month")
-              ) {
-                console.log(`Special match found for "1 month"`);
-                selectedInput = input;
-                break;
-              }
+      console.log(`Found ${validOptions.length} valid radio options`);
 
-              if (
-                (userNotice === "2 months" ||
-                  userNotice.includes("2 month") ||
-                  userNotice.includes("two month") ||
-                  userNotice === "2" ||
-                  userNotice === "two") &&
-                labelText.includes("2 month")
-              ) {
-                console.log(`Special match found for "2 months"`);
-                selectedInput = input;
-                break;
-              }
+      // Step 6: Get the target value to look for
+      const normalizedLower = normalizedNoticePeriod.toLowerCase();
+      let targetValue = "";
 
-              if (
-                (userNotice === "3 months or more" ||
-                  userNotice.includes("3 month") ||
-                  userNotice.includes("three month") ||
-                  userNotice.includes("more") ||
-                  userNotice === "3" ||
-                  userNotice === "three") &&
-                labelText.includes("3 month")
-              ) {
-                console.log(`Special match found for "3 months or more"`);
-                selectedInput = input;
-                break;
-              }
-            }
+      // Find which category this normalized value belongs to
+      for (const [key, values] of Object.entries(matchingMap)) {
+        if (
+          key === normalizedLower ||
+          values.some((v) => normalizedLower.includes(v.toLowerCase()))
+        ) {
+          targetValue = key;
+          break;
+        }
+      }
+
+      if (!targetValue) {
+        console.log("Could not determine target value from normalized notice period");
+        targetValue = normalizedLower; // Fallback to direct match
+      }
+
+      console.log(`Target value to look for: "${targetValue}"`);
+
+      // Step 7: Find the matching option
+      let matchedOption = null;
+      let matchedLabel = "";
+
+      // First try exact option text match
+      for (const option of validOptions) {
+        const label = option.querySelector(`label[class*="_label_"]`);
+        if (!label) continue;
+
+        const labelText = label.textContent?.toLowerCase().trim() || "";
+        console.log(`Checking option: "${labelText}"`);
+
+        // Check if this label matches our target value or any of its variations
+        const possibleMatches =
+          matchingMap[targetValue as keyof typeof matchingMap] || [];
+
+        if (
+          labelText === targetValue ||
+          possibleMatches.some((match) => labelText === match.toLowerCase())
+        ) {
+          console.log(`Found exact match: "${labelText}"`);
+          matchedOption = option;
+          matchedLabel = labelText;
+          break;
+        }
+      }
+
+      // If no exact match, try partial match
+      if (!matchedOption) {
+        for (const option of validOptions) {
+          const label = option.querySelector(`label[class*="_label_"]`);
+          if (!label) continue;
+
+          const labelText = label.textContent?.toLowerCase().trim() || "";
+          const possibleMatches =
+            matchingMap[targetValue as keyof typeof matchingMap] || [];
+
+          // Check for partial matches
+          if (
+            possibleMatches.some(
+              (match) =>
+                labelText.includes(match.toLowerCase()) ||
+                match.toLowerCase().includes(labelText)
+            )
+          ) {
+            console.log(`Found partial match: "${labelText}"`);
+            matchedOption = option;
+            matchedLabel = labelText;
+            break;
           }
         }
+      }
 
-        if (selectedInput instanceof HTMLInputElement) {
-          console.log(`Selected notice period radio input: ${selectedInput.id}`);
-          selectedInput.checked = true;
-          selectedInput.click(); // Some implementations require a click
-          selectedInput.dispatchEvent(new Event("change", { bubbles: true }));
+      // Step 8: If we found a match, select it
+      if (matchedOption) {
+        const radio = matchedOption.querySelector(
+          'input[type="radio"]'
+        ) as HTMLInputElement;
+        const label = matchedOption.querySelector(
+          `label[class*="_label_"]`
+        ) as HTMLElement;
 
-          fieldsHandled++;
-          console.log(`Successfully handled notice period field (fallback method)`);
-          return fieldsHandled;
-        } else {
-          console.log("No matching radio option found in fieldset");
+        if (radio && label) {
+          console.log(`Selecting option: "${matchedLabel}" via radio id=${radio.id}`);
+
+          try {
+            // More aggressive approach to ensure the radio gets checked
+
+            // Method 1: Direct property manipulation
+            radio.checked = true;
+            console.log(`Set checked=true on radio`);
+
+            // Method 2: Handle via attributes
+            radio.setAttribute("checked", "checked");
+            console.log(`Set checked attribute`);
+
+            // Method 3: Focus then click (sometimes this sequence matters)
+            radio.focus();
+            console.log(`Focused radio`);
+
+            // Method 4: Click the parent span container
+            const parentSpan = radio.closest('span[class*="_container_"]');
+            if (parentSpan instanceof HTMLElement) {
+              parentSpan.click();
+              console.log(`Clicked parent span`);
+            }
+
+            // Method 5: Click the radio directly
+            setTimeout(() => {
+              try {
+                radio.click();
+                console.log(`Clicked radio directly`);
+              } catch (e) {
+                console.error("Error clicking radio:", e);
+              }
+            }, 50);
+
+            // Method 6: Click the label (often the most reliable in custom UIs)
+            setTimeout(() => {
+              try {
+                label.click();
+                console.log(`Clicked label`);
+
+                // Double-check if radio is checked after clicking label
+                console.log(`Radio checked state after label click: ${radio.checked}`);
+              } catch (e) {
+                console.error("Error clicking label:", e);
+              }
+            }, 100);
+
+            // Method 7: Dispatch multiple event types
+            radio.dispatchEvent(new Event("input", { bubbles: true }));
+            radio.dispatchEvent(new Event("change", { bubbles: true }));
+            radio.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
+            radio.dispatchEvent(new MouseEvent("mouseup", { bubbles: true }));
+            radio.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+            console.log(`Dispatched multiple events`);
+
+            fieldsHandled++;
+            return fieldsHandled;
+          } catch (e) {
+            console.error("Error selecting radio option:", e);
+          }
+        }
+      } else {
+        console.log("No matching option found in this fieldset");
+      }
+    }
+
+    // Step 10: If we get here, try a more general approach as fallback
+    console.log("Fieldset approach failed, trying direct radio button search");
+
+    // Find all radio buttons on the page
+    const allRadios = document.querySelectorAll('input[type="radio"]');
+    console.log(`Found ${allRadios.length} radio buttons on page`);
+
+    for (const radio of allRadios) {
+      // Must have ID to find label
+      if (!radio.id) continue;
+
+      const label = document.querySelector(`label[for="${radio.id}"]`);
+      if (!label) continue;
+
+      const labelText = label.textContent?.toLowerCase().trim() || "";
+
+      // Only consider labels that look like notice period options
+      if (
+        labelText.includes("immediately") ||
+        labelText.includes("available") ||
+        labelText.includes("month") ||
+        labelText.includes("week") ||
+        labelText.match(/\d+\s*(-|to)\s*\d+\s*week/)
+      ) {
+        console.log(`Found potential notice period radio: "${labelText}"`);
+
+        // Find if the container has notice period text
+        const container = radio.closest("fieldset") || radio.closest("div");
+        const containerText = container?.textContent?.toLowerCase() || "";
+
+        if (containerText.includes("notice") || containerText.includes("begin working")) {
+          console.log("This radio appears to be in a notice period container");
+
+          // Check if this matches our normalized value
+          const normalizedLower = normalizedNoticePeriod.toLowerCase();
+          let isMatch = false;
+
+          for (const [key, values] of Object.entries(matchingMap)) {
+            if (
+              (key === normalizedLower ||
+                values.some((v) => normalizedLower.includes(v.toLowerCase()))) &&
+              (labelText === key.toLowerCase() ||
+                values.some(
+                  (v) =>
+                    labelText === v.toLowerCase() || labelText.includes(v.toLowerCase())
+                ))
+            ) {
+              isMatch = true;
+              break;
+            }
+          }
+
+          if (isMatch) {
+            console.log(`Found matching radio button: "${labelText}"`);
+
+            try {
+              const radioInput = radio as HTMLInputElement;
+
+              // Apply the same aggressive methods here
+              radioInput.checked = true;
+              radioInput.setAttribute("checked", "checked");
+              radioInput.focus();
+
+              // Click parent container if available
+              const parentSpan = radioInput.closest('span[class*="_container_"]');
+              if (parentSpan instanceof HTMLElement) {
+                parentSpan.click();
+              }
+
+              setTimeout(() => {
+                try {
+                  radioInput.click();
+                } catch (e) {
+                  // Silent error
+                }
+              }, 50);
+
+              if (label instanceof HTMLElement) {
+                setTimeout(() => {
+                  try {
+                    label.click();
+                    // Verify checked state
+                    console.log(`Fallback radio checked state: ${radioInput.checked}`);
+                  } catch (e) {
+                    // Silent error
+                  }
+                }, 100);
+              }
+
+              // Dispatch multiple events
+              radioInput.dispatchEvent(new Event("input", { bubbles: true }));
+              radioInput.dispatchEvent(new Event("change", { bubbles: true }));
+              radioInput.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
+              radioInput.dispatchEvent(new MouseEvent("mouseup", { bubbles: true }));
+              radioInput.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+
+              fieldsHandled++;
+              return fieldsHandled;
+            } catch (e) {
+              console.error("Error selecting fallback radio:", e);
+            }
+          }
         }
       }
     }
 
-    // Final fallback for text inputs
-    console.log("Trying text input fallback for notice period");
-    const noticePeriodField =
-      document.querySelector('input[placeholder*="Notice Period" i]') ||
-      document.querySelector('input[name*="notice" i]') ||
-      document.querySelector('label[for*="notice" i] ~ div input');
-
-    if (noticePeriodField instanceof HTMLInputElement) {
-      console.log("Found notice period text field:", noticePeriodField);
-      // Use the original value for text inputs to maintain compatibility with other sites
-      noticePeriodField.value = profile.noticePeriod;
-      noticePeriodField.dispatchEvent(new Event("input", { bubbles: true }));
-      noticePeriodField.dispatchEvent(new Event("change", { bubbles: true }));
-      fieldsHandled++;
-      console.log(`Successfully handled notice period field (text input method)`);
-    } else {
-      console.log("Could not find any notice period input field, all methods failed");
-    }
-  } else {
-    console.log("No notice period value provided in profile");
+    console.log("All approaches failed to find matching notice period option");
   }
 
   return fieldsHandled;

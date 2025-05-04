@@ -38,6 +38,7 @@ export const ashbyHqSelectors: MappedFields = {
       { name: "locationString" },
       { label: "Location" },
       { label: "Current Location" },
+      { label: "Your Country of Residence" },
       { placeholder: "Current Location" },
       { id: "_systemfield_location" },
       { selector: 'div._fieldEntry_hkyf8_29 input[placeholder*="location" i]' },

@@ -7,35 +7,48 @@ const getNormalizedNoticePeriod = (noticePeriod: string): string => {
   const trimmed = noticePeriod.trim();
   const lowerCase = trimmed.toLowerCase();
 
-  // Convert to AshbyHQ standard format while preserving original value
-  if (
+  const immediate =
     lowerCase.includes("immediate") ||
     lowerCase.includes("available") ||
     lowerCase === "0" ||
-    lowerCase === "asap"
-  ) {
-    return "Immediately available";
-  } else if (
+    lowerCase === "asap";
+
+  const oneMonth =
     lowerCase === "1 month" ||
     lowerCase.includes("one month") ||
     lowerCase === "1" ||
-    lowerCase === "one"
-  ) {
-    return "1 month";
-  } else if (
+    lowerCase === "one" ||
+    lowerCase.includes("2-4 week") ||
+    lowerCase.includes("2 - 4 week") ||
+    lowerCase.includes("2 to 4 week");
+
+  const twoMonths =
     lowerCase === "2 months" ||
     lowerCase.includes("two month") ||
     lowerCase === "2" ||
-    lowerCase === "two"
-  ) {
-    return "2 months";
-  } else if (
+    lowerCase === "two" ||
+    lowerCase.includes("4-8 week") ||
+    lowerCase.includes("4 - 8 week") ||
+    lowerCase.includes("4 to 8 week");
+
+  const threeMonthsOrMore =
     lowerCase === "3 months or more" ||
     lowerCase.includes("three month") ||
     lowerCase.includes("more") ||
     lowerCase === "3" ||
-    lowerCase === "three"
-  ) {
+    lowerCase === "three" ||
+    lowerCase.includes("8 week") ||
+    lowerCase.includes("8+") ||
+    lowerCase.includes("8 +");
+
+  // Convert to AshbyHQ standard format while preserving original value
+  if (immediate) {
+    return "Immediately available";
+  } else if (oneMonth) {
+    return "1 month";
+  } else if (twoMonths) {
+    return "2 months";
+  } else if (threeMonthsOrMore) {
     return "3 months or more";
   }
 
