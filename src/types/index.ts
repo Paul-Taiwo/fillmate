@@ -4,6 +4,7 @@ export interface UserProfile {
   phone: string;
   github: string;
   linkedin: string;
+  portfolio: string;
   location: string;
   visaStatus: string;
   gender: string;

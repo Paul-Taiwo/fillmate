@@ -39,6 +39,20 @@ const ProfessionalLinks: React.FC<ProfessionalLinksProps> = ({
           />
         </div>
       </div>
+
+      <div className='form-row'>
+        <div className='form-group'>
+          <label htmlFor='portfolio'>Portfolio</label>
+          <input
+            id='portfolio'
+            type='url'
+            name='portfolio'
+            value={profile.portfolio}
+            onChange={handleInputChange}
+            placeholder='https://yourportfolio.com'
+          />
+        </div>
+      </div>
     </div>
   );
 };

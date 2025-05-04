@@ -31,6 +31,13 @@ export const linkedInSelectors: MappedFields = {
   },
   linkedin: { selectors: [{ label: /LinkedIn Profile/i }], value: undefined },
   github: { selectors: [{ label: /Website|GitHub/i }], value: undefined },
+  portfolio: {
+    selectors: [
+      { label: /Website|Portfolio/i },
+      { selector: "[data-test-form-element] input[id*=website]" },
+    ],
+    value: undefined,
+  },
   visaStatus: {
     selectors: [{ label: /authorized to work|sponsorship/i }],
     value: undefined,

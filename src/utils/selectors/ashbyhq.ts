@@ -67,6 +67,31 @@ export const ashbyHqSelectors: MappedFields = {
     ],
     value: undefined,
   },
+  portfolio: {
+    selectors: [
+      { name: "candidateProfileLinks.portfolioUrl" },
+      { label: /Portfolio|Personal Website|Website/i },
+      { placeholder: "Portfolio URL" },
+      { placeholder: "Personal Website" },
+      { placeholder: "Type here..." },
+      { selector: 'input[placeholder*="Portfolio" i]' },
+      { selector: 'input[placeholder*="Personal website" i]' },
+      { selector: 'input[name*="portfolio" i]' },
+      { selector: 'input[name*="website" i]' },
+      { selector: 'label[for*="portfolio" i] ~ div input' },
+      { selector: 'label[for*="website" i] ~ div input' },
+      { selector: 'div._fieldEntry_hkyf8_29 label:contains("Portfolio") ~ input' },
+      {
+        selector:
+          'div.ashby-application-form-field-entry label:contains("Portfolio") ~ input',
+      },
+      {
+        selector:
+          'div._fieldEntry_hkyf8_29 label[class*="_label_"][class*="ashby-application-form-question-title"]:contains("Portfolio") ~ input',
+      },
+    ],
+    value: undefined,
+  },
   visaStatus: {
     selectors: [
       { label: /Work authorization|Sponsorship/i },

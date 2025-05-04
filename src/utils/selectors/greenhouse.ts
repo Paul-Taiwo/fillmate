@@ -36,6 +36,14 @@ export const greenhouseSelectors: MappedFields = {
     selectors: [{ label: /GitHub URL/i }, { name: /github/i }],
     value: undefined,
   },
+  portfolio: {
+    selectors: [
+      { label: /Portfolio|Personal Website|Website URL/i },
+      { name: /portfolio|website/i },
+      { placeholder: /portfolio|website/i },
+    ],
+    value: undefined,
+  },
   visaStatus: { selectors: [{ label: /require sponsorship|visa/i }], value: undefined },
   gender: { selectors: [{ label: /gender/i }], value: undefined },
 };

@@ -30,6 +30,14 @@ export const leverSelectors: MappedFields = {
     selectors: [{ name: "urls[GitHub]" }, { label: /GitHub/i }],
     value: undefined,
   },
+  portfolio: {
+    selectors: [
+      { name: "urls[Portfolio]" },
+      { name: "urls[Website]" },
+      { label: /Portfolio|Personal Website|Website/i },
+    ],
+    value: undefined,
+  },
   visaStatus: {
     selectors: [{ name: /sponsor/i }, { label: /sponsor/i }],
     value: undefined,

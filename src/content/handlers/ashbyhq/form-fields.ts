@@ -271,6 +271,80 @@ export const handleAshbyHqBasicFields = async (profile: UserProfile): Promise<nu
       }
     }
 
+    // Handle Portfolio Website field
+    if (profile.portfolio) {
+      // Try to find dedicated portfolio fields first
+      const portfolioField =
+        document.querySelector('input[placeholder*="Portfolio" i]') ||
+        document.querySelector('input[name*="portfolio" i]') ||
+        document.querySelector('label[for*="portfolio" i] ~ div input') ||
+        document.querySelector('input[placeholder*="Personal website" i]') ||
+        document.querySelector('input[name*="website" i]') ||
+        document.querySelector('label[for*="website" i] ~ div input') ||
+        // Add specific targeting for AshbyHQ structure
+        document.querySelector(
+          'div._fieldEntry_hkyf8_29 label:has(~ div._description_hkyf8_49:contains("portfolio"))'
+        );
+
+      if (portfolioField instanceof HTMLInputElement) {
+        console.log("Found Portfolio field:", portfolioField);
+        portfolioField.value = profile.portfolio;
+        portfolioField.dispatchEvent(new Event("input", { bubbles: true }));
+        portfolioField.dispatchEvent(new Event("change", { bubbles: true }));
+        fieldsHandled++;
+      } else {
+        // Try finding by label text
+        const portfolioLabels = Array.from(document.querySelectorAll("label")).filter(
+          (label) => {
+            const text = label.textContent?.toLowerCase() || "";
+            return (
+              text.includes("portfolio") ||
+              text.includes("personal website") ||
+              text.includes("website") ||
+              text.includes("portfolio url")
+            );
+          }
+        );
+
+        console.log(`Found ${portfolioLabels.length} portfolio-related labels`);
+
+        for (const label of portfolioLabels) {
+          if (label.htmlFor) {
+            console.log(`Processing portfolio label with htmlFor=${label.htmlFor}`);
+            const inputElement = document.getElementById(label.htmlFor);
+            if (inputElement instanceof HTMLInputElement) {
+              console.log(`Found portfolio input element by ID ${label.htmlFor}`);
+              inputElement.value = profile.portfolio;
+              inputElement.dispatchEvent(new Event("input", { bubbles: true }));
+              inputElement.dispatchEvent(new Event("change", { bubbles: true }));
+              fieldsHandled++;
+              break;
+            }
+          }
+
+          // If input not found by ID, check for direct child input or sibling input
+          if (!fieldsHandled) {
+            // Try to find an input in the same div container
+            const fieldEntry =
+              label.closest("div._fieldEntry_hkyf8_29") ||
+              label.closest("div.ashby-application-form-field-entry");
+
+            if (fieldEntry) {
+              const input = fieldEntry.querySelector("input");
+              if (input instanceof HTMLInputElement) {
+                console.log("Found portfolio input in the same container as label");
+                input.value = profile.portfolio;
+                input.dispatchEvent(new Event("input", { bubbles: true }));
+                input.dispatchEvent(new Event("change", { bubbles: true }));
+                fieldsHandled++;
+                break;
+              }
+            }
+          }
+        }
+      }
+    }
+
     // Handle Gender dropdown
     if (profile.gender) {
       const genderLabels = Array.from(document.querySelectorAll("label")).filter(

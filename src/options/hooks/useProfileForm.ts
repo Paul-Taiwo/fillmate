@@ -12,6 +12,7 @@ export const useProfileForm = () => {
     phone: "",
     github: "",
     linkedin: "",
+    portfolio: "",
     location: "",
     visaStatus: "",
     gender: "",

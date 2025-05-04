@@ -49,6 +49,15 @@ export const genericSelectors: MappedFields = {
     ],
     value: undefined,
   },
+  portfolio: {
+    selectors: [
+      { label: /portfolio|personal website|website|portfolio url/i },
+      { name: /portfolio|website/i },
+      { id: /portfolio|website/i },
+      { placeholder: /portfolio|personal website|website|portfolio url/i },
+    ],
+    value: undefined,
+  },
   location: {
     selectors: [
       { label: /location|city|address/i },

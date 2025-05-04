@@ -29,6 +29,14 @@ export const wellfoundSelectors: MappedFields = {
     selectors: [{ name: "github_url" }, { placeholder: /github/i }],
     value: undefined,
   },
+  portfolio: {
+    selectors: [
+      { name: "website" },
+      { name: "portfolio_url" },
+      { placeholder: /portfolio|website/i },
+    ],
+    value: undefined,
+  },
   visaStatus: { selectors: [{ label: /sponsor/i }], value: undefined },
   gender: { selectors: [{ label: /gender/i }], value: undefined },
 };
