@@ -1,12 +1,12 @@
-import React, { ChangeEvent } from "react";
+import React from "react";
 import { UserProfile } from "../../types";
 
 interface ProfileDetailsProps {
   profile: UserProfile;
   handleInputChange: (
-    e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => void;
-  handleSourceCheckboxChange: (e: ChangeEvent<HTMLInputElement>) => void;
+  handleSourceCheckboxChange: (source: string, isChecked: boolean) => void;
 }
 
 const ProfileDetails: React.FC<ProfileDetailsProps> = ({
@@ -14,6 +14,23 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({
   handleInputChange,
   handleSourceCheckboxChange,
 }) => {
+  // Parse the current sources to determine which checkboxes should be checked
+  const currentSources = profile.howDidYouHear
+    ? profile.howDidYouHear
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean)
+    : [];
+
+  // Helper function to check if a source is selected
+  const isSourceSelected = (source: string) => currentSources.includes(source);
+
+  // Handle checkbox change
+  const onCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { value, checked } = e.target;
+    handleSourceCheckboxChange(value, checked);
+  };
+
   return (
     <div className='section-container'>
       <h2>Details</h2>
@@ -73,83 +90,129 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({
             </div>
           </div>
         </div>
+      </div>
 
+      <div className='form-row'>
         <div className='form-group'>
-          <div className='radio-group'>
-            <label className='radio-group-label'>Notice Period</label>
-            <div className='radio-options'>
+          <label htmlFor='noticePeriod'>Notice Period</label>
+          <select
+            id='noticePeriod'
+            name='noticePeriod'
+            value={profile.noticePeriod}
+            onChange={handleInputChange}>
+            <option value=''>Select...</option>
+            <option value='Immediately available'>Immediately available</option>
+            <option value='1 week'>1 week</option>
+            <option value='2 weeks'>2 weeks</option>
+            <option value='1 month'>1 month</option>
+            <option value='2 months'>2 months</option>
+            <option value='3 months or more'>3 months or more</option>
+          </select>
+        </div>
+      </div>
+
+      <div className='form-row'>
+        <div className='form-group'>
+          <div className='checkbox-group'>
+            <label className='checkbox-group-label'>How Did You Hear About Us?</label>
+            <div className='checkbox-options'>
               <label>
                 <input
-                  type='radio'
-                  name='noticePeriod'
-                  value='Immediately available'
-                  checked={profile.noticePeriod === "Immediately available"}
-                  onChange={handleInputChange}
+                  type='checkbox'
+                  value='LinkedIn'
+                  checked={isSourceSelected("LinkedIn")}
+                  onChange={onCheckboxChange}
                 />
-                Immediately available
+                LinkedIn
               </label>
               <label>
                 <input
-                  type='radio'
-                  name='noticePeriod'
-                  value='1 month'
-                  checked={profile.noticePeriod === "1 month"}
-                  onChange={handleInputChange}
+                  type='checkbox'
+                  value='Twitter'
+                  checked={isSourceSelected("Twitter")}
+                  onChange={onCheckboxChange}
                 />
-                1 month
+                Twitter
               </label>
               <label>
                 <input
-                  type='radio'
-                  name='noticePeriod'
-                  value='2 months'
-                  checked={profile.noticePeriod === "2 months"}
-                  onChange={handleInputChange}
+                  type='checkbox'
+                  value='Job Board'
+                  checked={isSourceSelected("Job Board")}
+                  onChange={onCheckboxChange}
                 />
-                2 months
+                Job Board
               </label>
               <label>
                 <input
-                  type='radio'
-                  name='noticePeriod'
-                  value='3 months or more'
-                  checked={profile.noticePeriod === "3 months or more"}
-                  onChange={handleInputChange}
+                  type='checkbox'
+                  value='Glassdoor'
+                  checked={isSourceSelected("Glassdoor")}
+                  onChange={onCheckboxChange}
                 />
-                3 months or more
+                Glassdoor
+              </label>
+              <label>
+                <input
+                  type='checkbox'
+                  value='Family/Friends'
+                  checked={isSourceSelected("Family/Friends")}
+                  onChange={onCheckboxChange}
+                />
+                Family/Friends
+              </label>
+              <label>
+                <input
+                  type='checkbox'
+                  value='News/Media'
+                  checked={isSourceSelected("News/Media")}
+                  onChange={onCheckboxChange}
+                />
+                News/Media
+              </label>
+              <label>
+                <input
+                  type='checkbox'
+                  value='Event/Conference'
+                  checked={isSourceSelected("Event/Conference")}
+                  onChange={onCheckboxChange}
+                />
+                Event/Conference
+              </label>
+              <label>
+                <input
+                  type='checkbox'
+                  value='Company Website'
+                  checked={isSourceSelected("Company Website")}
+                  onChange={onCheckboxChange}
+                />
+                Company Website
+              </label>
+              <label>
+                <input
+                  type='checkbox'
+                  value='Other'
+                  checked={isSourceSelected("Other")}
+                  onChange={onCheckboxChange}
+                />
+                Other
               </label>
             </div>
           </div>
         </div>
       </div>
 
-      <div className='checkbox-group'>
-        <label className='checkbox-group-label'>How Did You Hear About Us?</label>
-        <div className='checkbox-options'>
-          {[
-            "LinkedIn",
-            "Twitter",
-            "Job Board",
-            "Glassdoor",
-            "Family / Friends",
-            "News / Media",
-            "Event / Conference",
-            "Company Website",
-            "Other",
-          ].map((source) => (
-            <label key={source}>
-              <input
-                type='checkbox'
-                name={source}
-                checked={profile.howDidYouHear
-                  .split(",")
-                  .map((s) => s.trim())
-                  .includes(source)}
-                onChange={handleSourceCheckboxChange}
-              />
-              {source}
-            </label>
-          ))}
+      <div className='form-row'>
+        <div className='form-group'>
+          <label htmlFor='location'>Location</label>
+          <input
+            type='text'
+            id='location'
+            name='location'
+            placeholder='e.g. London, UK'
+            value={profile.location}
+            onChange={handleInputChange}
+          />
         </div>
       </div>
     </div>

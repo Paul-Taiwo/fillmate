@@ -7,13 +7,14 @@ import {
   // CustomQA,
 } from "./components";
 import { useProfileForm } from "./hooks/useProfileForm";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import "./App.css";
 
 const App: React.FC = () => {
   const {
     profile,
     isLoading,
-    statusMessage,
     handleInputChange,
     handleSourceCheckboxChange,
     handleFileChange,
@@ -46,8 +47,20 @@ const App: React.FC = () => {
           removeCustomQA={removeCustomQA}
         /> */}
         <button type='submit'>Save Profile</button>
-        {statusMessage && <p className='status-message'>{statusMessage}</p>}
       </form>
+
+      {/* Add ToastContainer at the bottom of your app */}
+      <ToastContainer
+        position='top-right'
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
     </div>
   );
 };

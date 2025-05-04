@@ -95,15 +95,6 @@ button[type="submit"]:hover {
   background-color: #c0392b;
 }
 
-.status-message {
-  margin-top: 1rem;
-  padding: 0.75rem;
-  border-radius: 4px;
-  background-color: #f8f9fa;
-  border-left: 4px solid #3498db;
-  font-weight: 500;
-}
-
 /* Add responsive design */
 @media (max-width: 768px) {
   input,
@@ -126,19 +117,36 @@ button[type="submit"]:hover {
   margin-bottom: 0.5rem;
 }
 
-.radio-options {
+/* Checkbox group styling */
+.checkbox-group {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  margin-left: 1rem;
+  margin-bottom: 1rem;
 }
 
-.radio-options label {
+.checkbox-group-label {
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+.checkbox-options {
   display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.checkbox-options label {
+  display: flex;
+  flex-direction: row;
   align-items: center;
   gap: 0.5rem;
   font-weight: normal;
-  cursor: pointer;
+  margin-right: 1rem;
+}
+
+.checkbox-options input[type="checkbox"] {
+  width: auto;
 }
 
 /* Add styling for checkbox groups */

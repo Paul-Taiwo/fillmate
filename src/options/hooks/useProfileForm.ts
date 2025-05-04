@@ -1,6 +1,7 @@
 import { useState, useEffect, ChangeEvent, FormEvent } from "react";
 import { UserProfile } from "../../types";
 import { getUserProfile, saveUserProfile } from "../../storage/userProfile";
+import { toast } from "react-toastify";
 
 const MAX_FILE_SIZE_MB = 4;
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
@@ -21,7 +22,6 @@ export const useProfileForm = () => {
     customQA: [{ question: "", answer: "" }],
   });
   const [isLoading, setIsLoading] = useState(true);
-  const [statusMessage, setStatusMessage] = useState<string>("");
 
   useEffect(() => {
     // Load existing profile on component mount
@@ -34,10 +34,20 @@ export const useProfileForm = () => {
       })
       .catch((err) => {
         console.error("Error loading profile:", err);
-        setStatusMessage("Error loading profile.");
+        const errorMsg = "Error loading profile.";
+        toast.error(errorMsg);
         setIsLoading(false);
       });
   }, []);
+
+  // Helper function to show toast and set status message
+  const showToast = (message: string, isError = false) => {
+    if (isError) {
+      toast.error(message);
+    } else {
+      toast.success(message);
+    }
+  };
 
   const handleInputChange = (
     e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
@@ -46,30 +56,27 @@ export const useProfileForm = () => {
     setProfile((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSourceCheckboxChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const { name, checked } = e.target;
-
+  const handleSourceCheckboxChange = (source: string, isChecked: boolean) => {
     setProfile((prev) => {
-      const currentSources = prev.howDidYouHear
-        ? prev.howDidYouHear
-            .split(",")
-            .map((s) => s.trim())
-            .filter(Boolean)
-        : [];
+      // Current sources as comma-separated string
+      const currentSources = prev.howDidYouHear || "";
 
-      let newSources;
-      if (checked) {
-        if (!currentSources.includes(name)) {
-          newSources = [...currentSources, name];
-        } else {
-          newSources = currentSources;
-        }
-      } else {
-        newSources = currentSources.filter((source) => source !== name);
+      // Convert to array, filter empty strings
+      let sourcesArray = currentSources
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+
+      if (isChecked && !sourcesArray.includes(source)) {
+        // Add source if checked and not already in list
+        sourcesArray.push(source);
+      } else if (!isChecked) {
+        // Remove source if unchecked
+        sourcesArray = sourcesArray.filter((s) => s !== source);
       }
 
-      const newSourcesString = newSources.join(",");
-      return { ...prev, howDidYouHear: newSourcesString };
+      // Join back to comma-separated string
+      return { ...prev, howDidYouHear: sourcesArray.join(", ") };
     });
   };
 
@@ -83,12 +90,10 @@ export const useProfileForm = () => {
 
     if (file) {
       if (file.size > MAX_FILE_SIZE_BYTES) {
-        setStatusMessage(
-          `Error: File "${file.name}" is too large (Max ${MAX_FILE_SIZE_MB}MB).`
-        );
+        const errorMsg = `Error: File "${file.name}" is too large (Max ${MAX_FILE_SIZE_MB}MB).`;
+        showToast(errorMsg, true);
         inputElement.value = "";
         setProfile((prev) => ({ ...prev, [fileType]: undefined }));
-        setTimeout(() => setStatusMessage(""), 5000);
         return;
       }
 
@@ -101,26 +106,25 @@ export const useProfileForm = () => {
               ...prev,
               [fileType]: { name: file.name, dataUrl: result },
             }));
-            setStatusMessage(`File "${file.name}" ready.`);
-            setTimeout(() => setStatusMessage(""), 3000);
+            showToast(`File "${file.name}" ready.`);
           }
         };
 
         reader.onerror = () => {
           console.error("FileReader error:", reader.error);
-          setStatusMessage(`Error reading file "${file.name}".`);
+          const errorMsg = `Error reading file "${file.name}".`;
+          showToast(errorMsg, true);
           inputElement.value = "";
           setProfile((prev) => ({ ...prev, [fileType]: undefined }));
-          setTimeout(() => setStatusMessage(""), 5000);
         };
 
         reader.readAsDataURL(file);
       } catch (error) {
         console.error("Error handling file:", error);
-        setStatusMessage(`Error processing file "${file.name}".`);
+        const errorMsg = `Error processing file "${file.name}".`;
+        showToast(errorMsg, true);
         inputElement.value = "";
         setProfile((prev) => ({ ...prev, [fileType]: undefined }));
-        setTimeout(() => setStatusMessage(""), 5000);
       }
     } else {
       setProfile((prev) => ({ ...prev, [fileType]: undefined }));
@@ -151,10 +155,10 @@ export const useProfileForm = () => {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    setStatusMessage("Saving...");
+
     try {
       await saveUserProfile(profile);
-      setStatusMessage("Profile saved successfully!");
+      showToast("Profile saved successfully!");
     } catch (error: unknown) {
       console.error("Failed to save profile:", error);
       if (
@@ -162,20 +166,19 @@ export const useProfileForm = () => {
         error.message &&
         error.message.includes("QUOTA_BYTES")
       ) {
-        setStatusMessage(
-          "Error: Could not save profile. Storage quota exceeded. Try removing large files."
+        showToast(
+          "Error: Could not save profile. Storage quota exceeded. Try removing large files.",
+          true
         );
       } else {
-        setStatusMessage("Error saving profile. See console for details.");
+        showToast("Error saving profile. See console for details.", true);
       }
     }
-    setTimeout(() => setStatusMessage(""), 5000);
   };
 
   return {
     profile,
     isLoading,
-    statusMessage,
     handleInputChange,
     handleSourceCheckboxChange,
     handleFileChange,

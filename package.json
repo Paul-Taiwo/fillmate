@@ -12,7 +12,8 @@
   "dependencies": {
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-draggable": "^4.4.6"
+    "react-draggable": "^4.4.6",
+    "react-toastify": "^11.0.5"
   },
   "devDependencies": {
     "@types/chrome": "^0.0.318",
