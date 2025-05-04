@@ -1,17 +1,17 @@
-import React, { useState, useEffect } from "react";
-import Draggable from "react-draggable"; // Using react-draggable for easy drag functionality
+import React, { useState, useEffect, useRef } from "react";
+import Draggable from "react-draggable";
 import { getUserProfile } from "../storage/userProfile";
 import { UserProfile } from "../types";
-import "./Sidebar.css"; // We'll add styles later
+import "./Sidebar.css";
 
 interface SidebarProps {
-  onAutofill: () => void; // Callback to trigger autofill in content script
+  onAutofill: () => void;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ onAutofill }) => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [isVisible, setIsVisible] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
+  const nodeRef = useRef(null);
 
   useEffect(() => {
     getUserProfile()
@@ -25,38 +25,34 @@ const Sidebar: React.FC<SidebarProps> = ({ onAutofill }) => {
       });
   }, []);
 
-  const handleAutofillClick = () => {
+  const handleButtonClick = () => {
     if (profile) {
-      console.log("Sidebar: Autofill initiated with profile:", profile);
-      onAutofill(); // Trigger the autofill action passed from the content script
+      onAutofill();
     } else {
-      console.warn("Sidebar: No profile loaded to autofill.");
-      // Optionally show a message to the user to set up their profile first
+      chrome.runtime.openOptionsPage();
     }
   };
 
-  if (!isVisible) {
-    return null; // Can add a small button to re-open later if needed
-  }
-
   return (
-    <Draggable handle='.sidebar-handle'>
-      <div className='job-autofill-sidebar'>
-        <div className='sidebar-handle'>Drag Me</div>
-        <button onClick={() => setIsVisible(false)} className='close-button'>
-          X
-        </button>
-        <h3>Autofill Controls</h3>
-        {isLoading ? (
-          <p>Loading profile...</p>
-        ) : profile ? (
-          <button onClick={handleAutofillClick} className='autofill-button'>
-            Autofill All
-          </button>
-        ) : (
-          <p>Please set up your profile in the extension popup.</p>
-        )}
-        {/* Optional: Add profile preview here */}
+    <Draggable handle='.drag-handle' nodeRef={nodeRef}>
+      <div
+        ref={nodeRef}
+        className={`autofill-button-floating ${isLoading ? "loading" : ""} ${
+          !profile ? "no-profile" : ""
+        }`}
+        title={profile ? "Click to autofill" : "Set up your profile"}>
+        <div className='button-content' onClick={handleButtonClick}>
+          {isLoading ? (
+            <div className='button-spinner'></div>
+          ) : profile ? (
+            <span className='material-icons'>auto_fix_high</span>
+          ) : (
+            <span className='material-icons'>settings</span>
+          )}
+        </div>
+        <div className='drag-handle' title='Hold to drag'>
+          <span className='material-icons'>drag_indicator</span>
+        </div>
       </div>
     </Draggable>
   );
