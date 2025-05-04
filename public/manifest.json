@@ -25,11 +25,9 @@
     },
     {
       "matches": [
-        "*://*.linkedin.com/*",
         "*://*.greenhouse.io/*",
         "*://*.lever.co/*",
         "*://*.ashbyhq.com/*",
-        "*://wellfound.com/*",
         "*://boards.greenhouse.io/*",
         "*://jobs.lever.co/*"
       ],
