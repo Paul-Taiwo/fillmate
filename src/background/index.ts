@@ -8,12 +8,6 @@ chrome.runtime.onInstalled.addListener((details) => {
   // }
 });
 
-chrome.action.onClicked.addListener(() => {
-  chrome.tabs.create({
-    url: chrome.runtime.getURL("src/popup/index.html"), // Try without the "src/" prefix
-  });
-});
-
 // Listen for messages from content scripts (like the sidebar)
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   console.log("Background received message:", message, "from sender:", sender);
