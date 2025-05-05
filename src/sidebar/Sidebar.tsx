@@ -28,7 +28,8 @@ const Sidebar: React.FC<SidebarProps> = ({ onAutofill }) => {
     if (profile) {
       onAutofill();
     } else {
-      chrome.runtime.openOptionsPage();
+      // Send message to background script to open options page
+      chrome.runtime.sendMessage({ action: "openOptions" });
     }
   };
 

@@ -29,7 +29,28 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     return true; // Indicates we will send a response asynchronously
   }
 
+  // Handle opening options page
+  if (message.action === "openOptions") {
+    chrome.runtime
+      .openOptionsPage()
+      .then(() => {
+        sendResponse({ success: true });
+      })
+      .catch((error) => {
+        sendResponse({ success: false, error: error.message });
+      });
+    return true; // Indicates we will send a response asynchronously
+  }
+
   // Default response for unhandled message actions
   sendResponse({ success: false, message: "Unhandled message action." });
   return true;
+});
+
+// Listen for extension installation
+chrome.runtime.onInstalled.addListener((details) => {
+  if (details.reason === "install") {
+    // Open options page on first install
+    chrome.runtime.openOptionsPage();
+  }
 });
