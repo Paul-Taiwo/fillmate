@@ -2,6 +2,8 @@
 
 Fillmate is a lightweight Chrome extension that helps you speed through job applications by automatically filling your saved information across popular job boards.
 
+[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-support-yellow.svg?style=flat-square&logo=buy-me-a-coffee)](https://buymeacoffee.com/paultaiwo)
+
 ## 🚀 Features
 
 ✅ **Autofill common application fields with one click**
