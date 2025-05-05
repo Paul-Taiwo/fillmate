@@ -48,16 +48,6 @@ Make sure you have [Node.js](https://nodejs.org/) (version 18+ or 20+) installed
     npm install
     ```
 
-## 🏗️ Development
-
-To start the development server:
-
-```sh
-npm run dev
-```
-
-This will start the Vite development server and build the extension files.
-
 ## 📦 Build 
 
 To create a production build:
